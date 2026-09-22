@@ -273,7 +273,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <p id="dateRangeText">Weekly unit sales by store</p>
     </div>
     <button class="srcbadge" id="srcBadge" title="Click to retry loading live data">
-      <span class="dot2"></span><span id="srcBadgeText">Snapshot data</span>
+      <span class="dot2"></span><span id="srcBadgeText">Snapshot Data</span>
     </button>
     <div class="toolbtns">
       <button class="iconbtn" id="btnCsv">Download CSV</button>
@@ -1083,10 +1083,10 @@ function updateSourceBadge(){
   const t = document.getElementById('srcBadgeText');
   if (dataSource === 'live'){
     b.classList.add('live');
-    t.textContent = 'Live data (Supabase)';
+    t.textContent = 'Live Data (Supabase)';
   } else {
     b.classList.remove('live');
-    t.textContent = `Snapshot (${DATA.weeks.length} wks embedded)`;
+    t.textContent = `Snapshot Data (${DATA.weeks.length} wks embedded)`;
   }
 }
 async function attemptLiveLoad(){
