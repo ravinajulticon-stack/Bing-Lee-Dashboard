@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bing Lee — Sales per Model per Store</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --page-bg:#f9f9f7;
+  --surface:#fcfcfb;
+  --surface-2:#ffffff;
+  --text-primary:#0b0b0b;
+  --text-secondary:#52514e;
+  --text-muted:#898781;
+  --border:rgba(11,11,11,0.10);
+  --grid:#e1e0d9;
+  --baseline:#c3c2b7;
+  --accent:#2a78d6;
+  --accent-soft:rgba(42,120,214,0.12);
+  --accent-wash:rgba(42,120,214,0.08);
+  --good:#0ca30c;
+  --critical:#d03b3b;
+  --warn:#b8860b;
+  --good-soft:rgba(12,163,12,0.12);
+  --warn-soft:rgba(184,134,11,0.14);
+  --critical-soft:rgba(208,59,59,0.12);
+  --shadow:0 1px 2px rgba(11,11,11,0.04), 0 8px 24px rgba(11,11,11,0.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --page-bg:#0d0d0d; --surface:#1a1a19; --surface-2:#212120;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --border:rgba(255,255,255,0.10); --grid:#2c2c2a; --baseline:#383835;
+    --accent:#3987e5; --accent-soft:rgba(57,135,229,0.18); --accent-wash:rgba(57,135,229,0.10);
+    --good:#0ca30c; --critical:#e66767; --warn:#e0b94f;
+    --good-soft:rgba(12,163,12,0.16); --warn-soft:rgba(224,185,79,0.16); --critical-soft:rgba(230,103,103,0.16);
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page-bg:#0d0d0d; --surface:#1a1a19; --surface-2:#212120;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+  --border:rgba(255,255,255,0.10); --grid:#2c2c2a; --baseline:#383835;
+  --accent:#3987e5; --accent-soft:rgba(57,135,229,0.18); --accent-wash:rgba(57,135,229,0.10);
+  --good:#0ca30c; --critical:#e66767; --warn:#e0b94f;
+  --good-soft:rgba(12,163,12,0.16); --warn-soft:rgba(224,185,79,0.16); --critical-soft:rgba(230,103,103,0.16);
+  --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+html,body{background:var(--page-bg);}
+body{
+  color:var(--text-primary);
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding-inline:16px;
+  padding-block:28px 48px;
+  margin:0;
+}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+
+/* ---------- Titlebar ---------- */
+.titlebar{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.dots{display:flex;gap:7px;flex:0 0 auto;}
+.dot{width:12px;height:12px;border-radius:50%;}
+.dot.red{background:#ff5f57;} .dot.yellow{background:#febc2e;} .dot.green{background:#28c840;}
+.titletext{flex:1 1 220px;min-width:0;}
+.titletext h1{font-size:16px;font-weight:600;margin:0;letter-spacing:-0.01em;}
+.titletext p{margin:2px 0 0;font-size:12.5px;color:var(--text-muted);}
+.toolbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.iconbtn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;font-family:inherit;
+  color:var(--text-secondary);background:var(--surface-2);
+  border:1px solid var(--border);border-radius:9px;padding:7px 13px;cursor:pointer;
+  text-decoration:none;
+}
+.iconbtn:hover{color:var(--text-primary);border-color:var(--accent);}
+.freshness{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:5px 10px;border-radius:99px;white-space:nowrap;border:1px solid var(--border);background:var(--surface-2);color:var(--text-secondary);}
+.freshness.fresh{color:var(--good);border-color:transparent;background:var(--good-soft);}
+.freshness.due{color:var(--warn);border-color:transparent;background:var(--warn-soft);}
+.freshness.stale{color:var(--critical);border-color:transparent;background:var(--critical-soft);}
+.srcbadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:99px;white-space:nowrap;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;background:var(--surface-2);font-family:inherit;}
+.srcbadge .dot2{width:7px;height:7px;border-radius:50%;background:var(--text-muted);}
+.srcbadge.live .dot2{background:var(--good);}
+.srcbadge.live{color:var(--good);}
+
+/* ---------- Error banner ---------- */
+#loadError{display:none;background:var(--critical-soft);border:1px solid var(--critical);color:var(--critical);
+  padding:12px 18px;border-radius:12px;font-size:13px;font-weight:500;}
+
+/* ---------- KPI strip ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px 18px;min-width:0;}
+.kpi .label{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin:0 0 8px;}
+.kpi .value{font-size:26px;font-weight:600;letter-spacing:-0.01em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .sub{margin:4px 0 0;font-size:12px;color:var(--text-secondary);}
+
+/* ---------- Filter bar ---------- */
+.filterbar{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.filterrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.filtergroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.filtergroup .flabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-right:2px;}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px;}
+.seg button{
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);
+  background:transparent;border:none;border-radius:7px;padding:6px 11px;cursor:pointer;
+}
+.seg button.active{background:var(--accent);color:#fff;}
+.pill{
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:6px 13px;cursor:pointer;
+}
+.pill.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+input[type="search"]{
+  background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border);
+  border-radius:9px;padding:7px 12px;font-size:12.5px;font-family:inherit;min-width:200px;
+}
+select{
+  appearance:none;background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border);
+  border-radius:9px;padding:7px 30px 7px 12px;font-size:12.5px;font-family:inherit;font-weight:500;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-muted) 50%),linear-gradient(135deg,var(--text-muted) 50%,transparent 50%);
+  background-position:calc(100% - 16px) center,calc(100% - 11px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer;
+}
+.linklike{font-size:11px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;}
+.reset-link{margin-left:auto;}
+.filter-summary{font-size:12px;color:var(--text-muted);}
+
+/* ---------- Panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px 22px;overflow-x:auto;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.panel-head h2{font-size:14.5px;font-weight:600;margin:0;letter-spacing:-0.005em;}
+.panel-head .hint{font-size:12px;color:var(--text-muted);}
+.panel-head .headctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* ---------- Table ---------- */
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);padding:0 10px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th.num{text-align:right;}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:top;white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td.item{color:var(--text-primary);font-weight:600;font-size:12.5px;}
+tbody td.desc{font-size:12px;white-space:normal;max-width:280px;}
+tbody td.brand{font-size:11.5px;color:var(--text-muted);}
+tbody td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--text-primary);}
+.empty-row td{text-align:center;color:var(--text-muted);padding:24px 10px;font-weight:400;}
+
+/* matrix: sticky first column + sticky header */
+.matrix-wrap{max-height:70vh;overflow:auto;border:1px solid var(--border);border-radius:10px;}
+.matrix{min-width:100%;}
+.matrix th{position:sticky;top:0;background:var(--surface-2);z-index:2;}
+.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;background:var(--surface);z-index:1;min-width:190px;white-space:nowrap;}
+.matrix th:first-child{z-index:3;}
+.matrix td,.matrix th{border-right:1px solid var(--border);}
+.matrix td.zero{color:var(--baseline);}
+
+footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4px;}
+
+@media (max-width:860px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  select,input[type="search"]{min-width:0;width:100%;}
+  .filterrow{gap:10px;}
+  .pill,.seg button,.iconbtn{padding-block:9px;}
+}
+@media print{
+  body{background:#fff !important;color:#000 !important;padding:0;}
+  .filterbar,.toolbtns{display:none !important;}
+  .panel,.titlebar,.kpi{box-shadow:none !important;border:1px solid #ccc !important;background:#fff !important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titlebar">
+    <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+    <div class="titletext">
+      <h1>Sales per Model per Store</h1>
+      <p>Bing Lee weekly unit sales by product model &amp; store &mdash; companion to the Store Sales Dashboard</p>
+    </div>
+    <span class="freshness" id="freshnessBadge"></span>
+    <button class="srcbadge" id="srcBadge" title="Click to retry loading live data">
+      <span class="dot2"></span><span id="srcBadgeText">Loading&hellip;</span>
+    </button>
+    <div class="toolbtns">
+      <a class="iconbtn" href="index.html">&larr; Back to Dashboard</a>
+      <button class="iconbtn" id="btnPrint">Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div id="loadError"></div>
+
+  <div class="kpis" id="kpiStrip">
+    <div class="kpi"><div class="label">Total Units</div><div class="value" id="kpiUnits">&ndash;</div><div class="sub" id="kpiUnitsSub">&nbsp;</div></div>
+    <div class="kpi"><div class="label">Models Selling</div><div class="value" id="kpiModels">&ndash;</div><div class="sub" id="kpiModelsSub">&nbsp;</div></div>
+    <div class="kpi"><div class="label">Stores Selling</div><div class="value" id="kpiStores">&ndash;</div><div class="sub" id="kpiStoresSub">&nbsp;</div></div>
+    <div class="kpi"><div class="label">Model / Store Pairs</div><div class="value" id="kpiPairs">&ndash;</div><div class="sub">with sales in range</div></div>
+  </div>
+
+  <div class="filterbar">
+    <div class="filterrow">
+      <div class="filtergroup">
+        <span class="flabel">Week From</span>
+        <select id="weekFrom"></select>
+        <span class="flabel" style="margin-left:2px;">To</span>
+        <select id="weekTo"></select>
+      </div>
+
+      <div class="filtergroup">
+        <span class="flabel">Units</span>
+        <div class="seg" id="segUnits">
+          <button data-unit="net" class="active">Net</button>
+          <button data-unit="gross">Gross</button>
+        </div>
+      </div>
+
+      <div class="filtergroup">
+        <span class="flabel">Brand</span>
+        <div id="brandChips"></div>
+      </div>
+
+      <div class="filtergroup">
+        <span class="flabel">Channel</span>
+        <div class="seg" id="segChannel">
+          <button data-channel="stores" class="active">Stores only</button>
+          <button data-channel="all">Include Online Sales</button>
+        </div>
+      </div>
+    </div>
+    <div class="filterrow">
+      <div class="filtergroup">
+        <span class="flabel">Model</span>
+        <input type="search" id="modelSearch" list="modelList" autocomplete="off" placeholder="All models — click or type to filter">
+        <datalist id="modelList"></datalist>
+      </div>
+      <div class="filtergroup">
+        <span class="flabel">Store</span>
+        <input type="search" id="storeSearch" list="storeList" autocomplete="off" placeholder="All stores — click or type to filter">
+        <datalist id="storeList"></datalist>
+      </div>
+      <button class="linklike reset-link" id="btnReset">Reset filters</button>
+    </div>
+    <div class="filter-summary" id="filterSummary"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>By Model</h2>
+      <span class="hint">"Selling" counts stores with at least one unit invoiced in the selected period.</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Item Code</th><th>Description</th><th>Brand</th>
+          <th class="num">Total Units</th><th class="num">Stores Selling</th><th class="num">Avg / Selling Store</th>
+        </tr></thead>
+        <tbody id="modelBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>By Store</h2>
+      <div class="headctrls"><button class="iconbtn" id="exportStores">Download CSV</button></div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Store</th><th class="num">Total Units</th><th class="num">Items Sold</th><th>Top Item</th>
+        </tr></thead>
+        <tbody id="storeBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Model &times; Store Matrix</h2>
+      <div class="headctrls">
+        <div class="seg" id="rowLimitToggle">
+          <button data-limit="40" class="active">Top 40 stores</button>
+          <button data-limit="0">All stores</button>
+        </div>
+        <button class="iconbtn" id="exportMatrix">Download full matrix CSV</button>
+      </div>
+    </div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead><tr id="matrixHead"></tr></thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+    </div>
+    <span class="hint">Stores are ordered by total, models by total. Blank cells mean no units invoiced for that model at that store in the selected period. The CSV download always contains every store and model, regardless of the view limit above.</span>
+  </div>
+
+  <footer>Bing Lee &mdash; Store Sales Dashboard &middot; internal DDL Group tool</footer>
+</div>
+
+<script>
+/* ============================================================
+   Data source: Supabase table bing_lee_sales_rows (same project
+   & table as the main Store Sales Dashboard). Publishable key is
+   safe for the browser; RLS restricts it via the "Public read
+   access" policy. This page is live-only (no embedded snapshot) —
+   it is a secondary analytical view of the main dashboard's data.
+   ============================================================ */
+const SUPABASE_URL = 'https://vggbzpvgukprwpopewot.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_hG5I11kQ9k5IBYrHaCTkRg_WrwCXYAG';
+const SUPABASE_TABLE = 'bing_lee_sales_rows';
+
+let rows = [];       // flat rows: {week, weekLabel, store, brand, item, desc, qty}
+let weeks = [];      // sorted unique ISO week strings
+let brands = [];     // sorted unique brand list
+
+const state = {
+  weekFrom: null, weekTo: null, unitMode: 'net', includeOnline: false,
+  brand: 'all', model: '', store: ''
+};
+
+const fmtNum = n => Math.round(n).toLocaleString();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function parseWeekToDate(w){
+  if (/^\d{4}-\d{2}-\d{2}$/.test(w)) return new Date(w+'T00:00:00');
+  const m = String(w).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  return new Date(w);
+}
+function fmtWeekLabel(w){
+  const d = parseWeekToDate(w);
+  return d.toLocaleDateString('en-AU', {day:'2-digit', month:'short'});
+}
+
+/* ============ Live data loading, with retry ============ */
+async function fetchLive(attempt = 0){
+  const MAX = 3;
+  try{
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data, error } = await client
+      .from(SUPABASE_TABLE)
+      .select('report_date,store,brand,item_code,description,invoiced_qty')
+      .limit(50000);
+    if (error) throw new Error(error.message || 'Supabase query failed');
+    return data || [];
+  } catch(e){
+    if (attempt < MAX){ await sleep(500 * Math.pow(2, attempt)); return fetchLive(attempt+1); }
+    throw e;
+  }
+}
+
+function transform(records){
+  rows = records.map(r => ({
+    week: r.report_date,
+    store: r.store,
+    brand: r.brand,
+    item: r.item_code,
+    desc: r.description,
+    qty: Number(r.invoiced_qty) || 0
+  }));
+  weeks = [...new Set(rows.map(r => r.week))].sort();
+  brands = [...new Set(rows.map(r => r.brand))].filter(Boolean).sort();
+}
+
+async function loadData(){
+  const badge = document.getElementById('srcBadge');
+  const badgeText = document.getElementById('srcBadgeText');
+  const errEl = document.getElementById('loadError');
+  errEl.style.display = 'none';
+  badge.classList.remove('live');
+  badgeText.textContent = 'Loading…';
+  try{
+    const records = await fetchLive();
+    if (!records.length){
+      errEl.style.display = 'block';
+      errEl.textContent = 'Connected to Supabase but found no rows. Add a weekly CSV on the main dashboard first.';
+      badgeText.textContent = 'No data';
+      return;
+    }
+    transform(records);
+    badge.classList.add('live');
+    badgeText.textContent = 'Live Data (Supabase)';
+    buildFilters();
+    updateFreshnessBadge();
+    render();
+  } catch(e){
+    errEl.style.display = 'block';
+    errEl.textContent = "Couldn't load data from Supabase: " + e.message;
+    badgeText.textContent = 'Load failed';
+  }
+}
+
+function updateFreshnessBadge(){
+  const badge = document.getElementById('freshnessBadge');
+  if (!weeks.length){ badge.textContent = ''; badge.className = 'freshness'; return; }
+  const latest = weeks[weeks.length - 1];
+  const latestDate = parseWeekToDate(latest);
+  const daysSince = Math.floor((Date.now() - latestDate.getTime()) / 86400000);
+  const weeksSince = Math.max(0, Math.floor(daysSince / 7));
+  let cls, label;
+  if (weeksSince < 2){ cls = 'fresh'; label = 'Up to date'; }
+  else if (weeksSince < 4){ cls = 'due'; label = `${weeksSince} wks behind`; }
+  else { cls = 'stale'; label = `${weeksSince} wks behind`; }
+  badge.className = 'freshness ' + cls;
+  badge.textContent = `Latest week: ${fmtWeekLabel(latest)} · ${label}`;
+}
+
+/* ============ Filters ============ */
+function rebuildWeekSelects(){
+  const opts = weeks.map(w => `<option value="${w}">${fmtWeekLabel(w)}</option>`).join('');
+  const f = document.getElementById('weekFrom'), t = document.getElementById('weekTo');
+  f.innerHTML = opts; t.innerHTML = opts;
+  state.weekFrom = weeks[0]; state.weekTo = weeks[weeks.length - 1];
+  f.value = state.weekFrom; t.value = state.weekTo;
+}
+function rebuildBrandChips(){
+  const wrap = document.getElementById('brandChips');
+  wrap.innerHTML = '<button class="pill active" data-brand="all">All</button>' +
+    brands.map(b => `<button class="pill" data-brand="${b}">${b}</button>`).join('');
+  wrap.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.brand = btn.getAttribute('data-brand');
+      rebuildPickers();
+      render();
+    });
+  });
+}
+function rebuildPickers(){
+  const scoped = activeRowsExcept('model', 'store');
+  const models = new Map(), stores = new Map();
+  scoped.forEach(r => {
+    if (!models.has(r.item)) models.set(r.item, { desc: r.desc, units: 0 });
+    models.get(r.item).units += Math.max(r.qty, 0);
+    if (!stores.has(r.store)) stores.set(r.store, { units: 0 });
+    stores.get(r.store).units += Math.max(r.qty, 0);
+  });
+  document.getElementById('modelList').innerHTML =
+    [...models.entries()].sort((a,b) => b[1].units - a[1].units)
+      .map(([item, m]) => `<option value="${item}">${item}${m.desc ? '  —  ' + m.desc.slice(0,50) : ''}</option>`).join('');
+  document.getElementById('storeList').innerHTML =
+    [...stores.entries()].sort((a,b) => b[1].units - a[1].units)
+      .map(([name]) => `<option value="${name}"></option>`).join('');
+}
+
+function buildFilters(){
+  rebuildWeekSelects();
+  rebuildBrandChips();
+  rebuildPickers();
+
+  document.getElementById('weekFrom').addEventListener('change', e => {
+    state.weekFrom = e.target.value;
+    if (state.weekFrom > state.weekTo){ state.weekTo = state.weekFrom; document.getElementById('weekTo').value = state.weekTo; }
+    rebuildPickers(); render();
+  });
+  document.getElementById('weekTo').addEventListener('change', e => {
+    state.weekTo = e.target.value;
+    if (state.weekTo < state.weekFrom){ state.weekFrom = state.weekTo; document.getElementById('weekFrom').value = state.weekFrom; }
+    rebuildPickers(); render();
+  });
+
+  document.querySelectorAll('#segUnits button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#segUnits button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.unitMode = btn.getAttribute('data-unit');
+      render();
+    });
+  });
+  document.querySelectorAll('#segChannel button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#segChannel button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.includeOnline = btn.getAttribute('data-channel') === 'all';
+      render();
+    });
+  });
+  document.querySelectorAll('#rowLimitToggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#rowLimitToggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      rowLimit = Number(btn.getAttribute('data-limit'));
+      render();
+    });
+  });
+
+  let deb;
+  const onSearch = () => { clearTimeout(deb); deb = setTimeout(render, 200); };
+  document.getElementById('modelSearch').addEventListener('input', e => { state.model = e.target.value.trim().toLowerCase(); onSearch(); });
+  document.getElementById('storeSearch').addEventListener('input', e => { state.store = e.target.value.trim().toLowerCase(); onSearch(); });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    state.weekFrom = weeks[0]; state.weekTo = weeks[weeks.length-1];
+    state.unitMode = 'net'; state.includeOnline = false; state.brand = 'all';
+    state.model = ''; state.store = '';
+    document.getElementById('weekFrom').value = state.weekFrom;
+    document.getElementById('weekTo').value = state.weekTo;
+    document.querySelectorAll('#segUnits button').forEach(b => b.classList.toggle('active', b.getAttribute('data-unit') === 'net'));
+    document.querySelectorAll('#segChannel button').forEach(b => b.classList.toggle('active', b.getAttribute('data-channel') === 'stores'));
+    document.querySelectorAll('#brandChips .pill').forEach(b => b.classList.toggle('active', b.getAttribute('data-brand') === 'all'));
+    document.getElementById('modelSearch').value = '';
+    document.getElementById('storeSearch').value = '';
+    rebuildPickers();
+    render();
+  });
+
+  document.getElementById('exportStores').addEventListener('click', exportStoreCsv);
+  document.getElementById('exportMatrix').addEventListener('click', exportMatrixCsv);
+  document.getElementById('btnPrint').addEventListener('click', () => window.print());
+  document.getElementById('srcBadge').addEventListener('click', () => {
+    document.getElementById('srcBadgeText').textContent = 'Checking…';
+    loadData();
+  });
+}
+
+function effUnits(q){ return state.unitMode === 'gross' ? Math.max(q, 0) : q; }
+
+// Filters everything except the two named keys — used to build the
+// model/store pickers so each search box still offers all its own options.
+function activeRowsExcept(...skip){
+  return rows.filter(r =>
+    r.week >= state.weekFrom && r.week <= state.weekTo &&
+    (state.brand === 'all' || r.brand === state.brand) &&
+    (state.includeOnline || r.store !== 'Online Sales') &&
+    (skip.includes('model') || !state.model || r.item.toLowerCase().includes(state.model) || (r.desc||'').toLowerCase().includes(state.model)) &&
+    (skip.includes('store') || !state.store || r.store.toLowerCase().includes(state.store))
+  );
+}
+function activeRows(){ return activeRowsExcept(); }
+
+// Company-wide (model) totals include Online Sales regardless of the channel
+// toggle — that toggle only scopes the store-based views, matching the main
+// dashboard's leaderboard behaviour.
+function activeRowsForModels(){
+  return rows.filter(r =>
+    r.week >= state.weekFrom && r.week <= state.weekTo &&
+    (state.brand === 'all' || r.brand === state.brand) &&
+    (!state.model || r.item.toLowerCase().includes(state.model) || (r.desc||'').toLowerCase().includes(state.model)) &&
+    (!state.store || r.store.toLowerCase().includes(state.store))
+  );
+}
+
+function aggregate(){
+  const storeRows = activeRows();
+  const modelRows = activeRowsForModels();
+
+  const models = new Map();  // item -> {desc, brand, units, selling:Set}
+  modelRows.forEach(r => {
+    let m = models.get(r.item);
+    if (!m){ m = { desc: r.desc, brand: r.brand, units: 0, selling: new Set() }; models.set(r.item, m); }
+    m.units += effUnits(r.qty);
+    if (r.qty > 0) m.selling.add(r.store);
+  });
+
+  const stores = new Map(); // store -> {units, items:Map(item->units)}
+  const pairs = new Map();  // item|store -> units (store-scoped, for the matrix — respects channel toggle)
+  storeRows.forEach(r => {
+    let s = stores.get(r.store);
+    if (!s){ s = { units: 0, items: new Map() }; stores.set(r.store, s); }
+    const u = effUnits(r.qty);
+    s.units += u;
+    s.items.set(r.item, (s.items.get(r.item) || 0) + u);
+
+    const k = r.item + '|' + r.store;
+    pairs.set(k, (pairs.get(k) || 0) + u);
+  });
+
+  return { models, stores, pairs };
+}
+
+let rowLimit = 40;
+
+function render(){
+  const { models, stores, pairs } = aggregate();
+
+  const totalUnits = [...models.values()].reduce((s,m) => s + m.units, 0);
+  const sellingModels = [...models.values()].filter(m => m.selling.size > 0).length;
+  const sellingStores = [...stores.values()].filter(s => s.units > 0).length;
+  const livePairs = [...pairs.values()].filter(v => v > 0).length;
+
+  document.getElementById('kpiUnits').textContent = fmtNum(totalUnits);
+  document.getElementById('kpiUnitsSub').textContent = state.weekFrom ? `${fmtWeekLabel(state.weekFrom)} to ${fmtWeekLabel(state.weekTo)}` : '';
+  document.getElementById('kpiModels').textContent = fmtNum(sellingModels);
+  document.getElementById('kpiModelsSub').textContent = `of ${models.size} in range`;
+  document.getElementById('kpiStores').textContent = fmtNum(sellingStores);
+  document.getElementById('kpiStoresSub').textContent = `of ${stores.size} in range`;
+  document.getElementById('kpiPairs').textContent = fmtNum(livePairs);
+
+  document.getElementById('filterSummary').textContent =
+    `${state.unitMode === 'gross' ? 'Gross units (before returns)' : 'Net units (after returns)'}` +
+    (state.includeOnline ? ' · including Online Sales' : ' · stores only') +
+    (state.brand !== 'all' ? ` · ${state.brand} only` : '');
+
+  renderModels(models);
+  renderStores(stores);
+  renderMatrix(models, stores, pairs);
+}
+
+function renderModels(models){
+  const body = document.getElementById('modelBody');
+  const list = [...models.entries()].sort((a,b) => b[1].units - a[1].units);
+  if (!list.length){ body.innerHTML = '<tr class="empty-row"><td colspan="6">No data for this selection</td></tr>'; return; }
+  body.innerHTML = list.map(([item, m]) => {
+    const avg = m.selling.size ? m.units / m.selling.size : 0;
+    return `<tr><td class="item">${item}</td><td class="desc">${m.desc || ''}</td><td class="brand">${m.brand || '—'}</td>` +
+      `<td class="num">${fmtNum(m.units)}</td><td class="num">${fmtNum(m.selling.size)}</td><td class="num">${fmtNum(avg)}</td></tr>`;
+  }).join('');
+}
+
+function renderStores(stores){
+  const body = document.getElementById('storeBody');
+  const list = [...stores.entries()].sort((a,b) => b[1].units - a[1].units);
+  if (!list.length){ body.innerHTML = '<tr class="empty-row"><td colspan="4">No data for this selection</td></tr>'; return; }
+  body.innerHTML = list.map(([name, s]) => {
+    let top = '', topVal = -1;
+    for (const [item, v] of s.items){ if (v > topVal){ topVal = v; top = item; } }
+    return `<tr><td>${name}</td><td class="num">${fmtNum(s.units)}</td>` +
+      `<td class="num">${fmtNum([...s.items.values()].filter(v => v > 0).length)}</td><td class="desc">${top || '—'}</td></tr>`;
+  }).join('');
+}
+
+function renderMatrix(models, stores, pairs){
+  const modelList = [...models.entries()].sort((a,b) => b[1].units - a[1].units).map(e => e[0]);
+  let storeList = [...stores.entries()].sort((a,b) => b[1].units - a[1].units);
+  if (rowLimit) storeList = storeList.slice(0, rowLimit);
+
+  const head = document.getElementById('matrixHead');
+  head.innerHTML = '<th>Store</th>' + modelList.map(m => `<th class="num">${m}</th>`).join('') + '<th class="num">Total</th>';
+
+  const body = document.getElementById('matrixBody');
+  if (!storeList.length || !modelList.length){
+    body.innerHTML = '<tr class="empty-row"><td>No data for this selection</td></tr>';
+    return;
+  }
+  body.innerHTML = storeList.map(([name, s]) => {
+    const cells = modelList.map(m => {
+      const v = pairs.get(m + '|' + name) || 0;
+      return v ? `<td class="num">${fmtNum(v)}</td>` : '<td class="num zero">&middot;</td>';
+    }).join('');
+    return `<tr><td>${name}</td>${cells}<td class="num"><strong>${fmtNum(s.units)}</strong></td></tr>`;
+  }).join('');
+}
+
+/* ---------- CSV export ---------- */
+function download(name, text){
+  const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+const csvCell = v => {
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+};
+const rangeTag = () => (state.weekFrom || '') + '_to_' + (state.weekTo || '');
+
+function exportStoreCsv(){
+  const { stores } = aggregate();
+  const lines = [['Store', 'Total Units', 'Items Sold'].join(',')];
+  for (const [name, s] of [...stores.entries()].sort((a,b) => b[1].units - a[1].units)){
+    lines.push([name, s.units, [...s.items.values()].filter(v => v > 0).length].map(csvCell).join(','));
+  }
+  download('binglee_by_store_' + rangeTag() + '.csv', lines.join('\n'));
+}
+
+function exportMatrixCsv(){
+  const { models, stores, pairs } = aggregate();
+  const modelList = [...models.entries()].sort((a,b) => b[1].units - a[1].units).map(e => e[0]);
+  const head = ['Store'].concat(modelList.map(m => m + ' - ' + (models.get(m).desc || '').slice(0,40))).concat(['Total']);
+  const lines = [head.map(csvCell).join(',')];
+  for (const [name, s] of [...stores.entries()].sort((a,b) => b[1].units - a[1].units)){
+    const row = [name];
+    let tot = 0;
+    for (const m of modelList){
+      const v = pairs.get(m + '|' + name) || 0;
+      tot += v;
+      row.push(v);
+    }
+    row.push(tot);
+    lines.push(row.map(csvCell).join(','));
+  }
+  download('binglee_model_x_store_' + rangeTag() + '.csv', lines.join('\n'));
+}
+
+loadData();
+</script>
+</body>
+</html>
