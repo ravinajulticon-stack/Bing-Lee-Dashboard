@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bing Lee Store Sales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --page-bg:#f9f9f7;
+  --surface:#fcfcfb;
+  --surface-2:#ffffff;
+  --text-primary:#0b0b0b;
+  --text-secondary:#52514e;
+  --text-muted:#898781;
+  --border:rgba(11,11,11,0.10);
+  --grid:#e1e0d9;
+  --baseline:#c3c2b7;
+  --accent:#2a78d6;
+  --accent-soft:rgba(42,120,214,0.12);
+  --accent-wash:rgba(42,120,214,0.08);
+  --good:#0ca30c;
+  --critical:#d03b3b;
+  --shadow:0 1px 2px rgba(11,11,11,0.04), 0 8px 24px rgba(11,11,11,0.06);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --page-bg:#0d0d0d; --surface:#1a1a19; --surface-2:#212120;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --border:rgba(255,255,255,0.10); --grid:#2c2c2a; --baseline:#383835;
+    --accent:#3987e5; --accent-soft:rgba(57,135,229,0.18); --accent-wash:rgba(57,135,229,0.10);
+    --good:#0ca30c; --critical:#e66767; --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page-bg:#0d0d0d; --surface:#1a1a19; --surface-2:#212120;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+  --border:rgba(255,255,255,0.10); --grid:#2c2c2a; --baseline:#383835;
+  --accent:#3987e5; --accent-soft:rgba(57,135,229,0.18); --accent-wash:rgba(57,135,229,0.10);
+  --good:#0ca30c; --critical:#e66767; --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+html,body{background:var(--page-bg);}
+body{
+  color:var(--text-primary);
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding-inline:16px;
+  padding-block:28px 48px;
+  margin:0;
+}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+
+/* ---------- Titlebar ---------- */
+.titlebar{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.dots{display:flex;gap:7px;flex:0 0 auto;}
+.dot{width:12px;height:12px;border-radius:50%;}
+.dot.red{background:#ff5f57;} .dot.yellow{background:#febc2e;} .dot.green{background:#28c840;}
+.titletext{flex:1 1 220px;min-width:0;}
+.titletext h1{font-size:16px;font-weight:600;margin:0;letter-spacing:-0.01em;}
+.titletext p{margin:2px 0 0;font-size:12.5px;color:var(--text-muted);}
+.toolbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.iconbtn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;font-family:inherit;
+  color:var(--text-secondary);background:var(--surface-2);
+  border:1px solid var(--border);border-radius:9px;padding:7px 13px;cursor:pointer;
+}
+.iconbtn:hover{color:var(--text-primary);border-color:var(--accent);}
+.badge{font-size:11.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:5px 11px;border-radius:99px;white-space:nowrap;}
+.srcbadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:99px;white-space:nowrap;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;background:var(--surface-2);}
+.srcbadge .dot2{width:7px;height:7px;border-radius:50%;background:var(--text-muted);}
+.srcbadge.live .dot2{background:var(--good);}
+.srcbadge.live{color:var(--good);}
+
+/* ---------- KPI strip ---------- */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px 18px;min-width:0;}
+.kpi .label{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin:0 0 8px;}
+.kpi .value{font-size:26px;font-weight:600;letter-spacing:-0.01em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .sub{margin:4px 0 0;font-size:12px;color:var(--text-secondary);}
+
+/* ---------- Filter bar ---------- */
+.filterbar{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.filterrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.filtergroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.filtergroup .flabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-right:2px;}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px;}
+.seg button{
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);
+  background:transparent;border:none;border-radius:7px;padding:6px 11px;cursor:pointer;
+}
+.seg button.active{background:var(--accent);color:#fff;}
+.pill{
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:6px 13px;cursor:pointer;
+}
+.pill.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+.range-custom{display:none;align-items:center;gap:6px;}
+.range-custom.show{display:flex;}
+.range-custom select{padding:6px 26px 6px 10px;font-size:12px;min-width:0;}
+
+.dropdown{position:relative;}
+.dropdown-btn{
+  font-family:inherit;font-size:12px;font-weight:600;color:var(--text-secondary);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:7px 12px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.dropdown-btn.active{border-color:var(--accent);color:var(--accent);}
+.dropdown-panel{
+  display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:20;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:11px;box-shadow:var(--shadow);
+  padding:10px;width:280px;max-height:320px;overflow-y:auto;
+}
+.dropdown-panel.show{display:block;}
+.dropdown-panel input[type="text"]{
+  width:100%;padding:7px 10px;font-size:12.5px;font-family:inherit;border:1px solid var(--border);
+  border-radius:7px;background:var(--surface);color:var(--text-primary);margin-bottom:8px;
+}
+.dropdown-actions{display:flex;justify-content:space-between;margin-bottom:6px;}
+.linklike{font-size:11px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;}
+.chk-row{display:flex;align-items:flex-start;gap:8px;padding:5px 2px;font-size:12.5px;cursor:pointer;border-radius:6px;}
+.chk-row:hover{background:var(--accent-wash);}
+.chk-row input{margin-top:2px;}
+.chk-row .ci-item{font-weight:600;display:block;}
+.chk-row .ci-desc{color:var(--text-muted);font-size:11px;display:block;}
+.filter-summary{font-size:12px;color:var(--text-muted);}
+.filter-summary b{color:var(--text-secondary);font-weight:600;}
+.reset-link{margin-left:auto;}
+.tag-online{font-size:10px;font-weight:700;color:var(--text-muted);background:var(--grid);padding:1px 6px;border-radius:5px;margin-left:6px;letter-spacing:0.02em;vertical-align:1px;}
+
+/* ---------- Panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px 22px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.panel-head h2{font-size:14.5px;font-weight:600;margin:0;letter-spacing:-0.005em;}
+.panel-head .hint{font-size:12px;color:var(--text-muted);}
+
+/* ---------- Chart ---------- */
+.chart-wrap{position:relative;}
+.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
+.bar{fill:var(--accent);cursor:pointer;}
+.bar:hover{opacity:0.82;}
+.bar.zero{fill:var(--grid);}
+.gridline{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges;}
+.baseline{stroke:var(--baseline);stroke-width:1;shape-rendering:crispEdges;}
+.axis-label{fill:var(--text-muted);font-size:10.5px;font-family:inherit;}
+.value-label{fill:var(--text-secondary);font-size:10.5px;font-weight:600;font-family:inherit;}
+.line-path{fill:none;stroke-width:2;}
+.line-dot{cursor:pointer;}
+.empty-state{padding:40px 10px;text-align:center;color:var(--text-muted);font-size:13px;}
+
+.tooltip{
+  position:absolute;pointer-events:none;background:var(--text-primary);color:var(--page-bg);
+  font-size:11.5px;font-weight:600;padding:6px 10px;border-radius:8px;transform:translate(-50%,-115%);
+  white-space:nowrap;opacity:0;transition:opacity .1s ease;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,0.25);
+}
+.tooltip .sub{display:block;font-weight:400;opacity:0.75;font-size:10.5px;margin-top:1px;}
+.tooltip.show{opacity:1;}
+
+/* ---------- Leaderboard ---------- */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;}
+.board-row{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;background:transparent;border:1px solid transparent;}
+.board-row:hover{background:var(--accent-wash);}
+.board-row.active{background:var(--accent-soft);border-color:var(--accent);}
+.board-rank{font-size:11px;color:var(--text-muted);font-weight:600;text-align:right;}
+.board-main{min-width:0;}
+.board-name{font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.board-track{height:5px;border-radius:99px;background:var(--grid);margin-top:5px;overflow:hidden;}
+.board-fill{height:100%;background:var(--accent);border-radius:99px;}
+.board-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.board-value{font-size:12.5px;font-weight:600;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.trend{font-size:10.5px;font-weight:700;white-space:nowrap;}
+.trend.up{color:var(--good);}
+.trend.down{color:var(--critical);}
+.trend.flag{color:var(--critical);background:rgba(208,59,59,0.12);padding:1px 6px;border-radius:5px;}
+.trend.new{color:var(--accent);}
+.trend.flat{color:var(--text-muted);}
+.channel-toggle-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
+
+/* ---------- Tabs ---------- */
+.tabs{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;margin-bottom:16px;}
+.tabs button{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--text-secondary);background:transparent;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;}
+.tabs button.active{background:var(--accent);color:#fff;}
+.tabpane{display:none;}
+.tabpane.active{display:block;}
+
+/* ---------- Store detail controls ---------- */
+.controls{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;}
+select{
+  appearance:none;background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border);
+  border-radius:9px;padding:9px 34px 9px 12px;font-size:13.5px;font-family:inherit;font-weight:500;min-width:240px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-muted) 50%),linear-gradient(135deg,var(--text-muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) center,calc(100% - 13px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer;
+}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+.mini-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+.mini-kpi{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;}
+.mini-kpi .label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin:0 0 5px;}
+.mini-kpi .value{font-size:18px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini-kpi .value.small{font-size:13.5px;}
+
+/* ---------- Table ---------- */
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px;}
+thead th{text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);padding:0 10px 8px;border-bottom:1px solid var(--border);}
+thead th.num{text-align:right;}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td.item{color:var(--text-primary);font-weight:600;font-size:12.5px;}
+tbody td.desc{font-size:12px;}
+tbody td.brand{font-size:11.5px;color:var(--text-muted);}
+tbody td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--text-primary);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+/* ---------- Compare tab ---------- */
+.chip-picker{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;position:relative;}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:5px 6px 5px 12px;font-size:12.5px;font-weight:600;}
+.chip .sw{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+.chip button{background:var(--grid);border:none;border-radius:50%;width:17px;height:17px;line-height:1;cursor:pointer;color:var(--text-secondary);font-size:12px;}
+.add-store{position:relative;}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;justify-content:center;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);}
+.legend-item .sw{width:10px;height:10px;border-radius:3px;}
+.compare-empty{padding:50px 10px;text-align:center;color:var(--text-muted);font-size:13.5px;}
+
+footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4px;}
+
+@media (max-width:860px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .board{grid-template-columns:1fr;}
+  .two-col{grid-template-columns:1fr;}
+  .mini-kpis{grid-template-columns:repeat(2,1fr);}
+  select{min-width:0;width:100%;}
+  .filterrow{gap:10px;}
+  /* touch target polish */
+  .board-row{padding:11px 8px;min-height:44px;}
+  .chip{padding:8px 8px 8px 14px;}
+  .chip button{width:23px;height:23px;font-size:14px;}
+  .chk-row{padding:9px 4px;min-height:40px;}
+  .pill,.seg button,.dropdown-btn,.iconbtn{padding-block:9px;}
+  .srcbadge{padding-block:8px;}
+}
+
+@media print{
+  body{background:#fff !important;color:#000 !important;padding:0;}
+  .filterbar,.toolbtns,.controls,select,.tabs,.channel-toggle-row{display:none !important;}
+  .panel,.titlebar,.kpi,.mini-kpi{box-shadow:none !important;border:1px solid #ccc !important;background:#fff !important;}
+  .tabpane{display:block !important;}
+  .panel{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titlebar">
+    <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+    <div class="titletext">
+      <h1>Bing Lee &mdash; Store Sales Dashboard</h1>
+      <p id="dateRangeText">Weekly unit sales by store</p>
+    </div>
+    <button class="srcbadge" id="srcBadge" title="Click to retry loading live data">
+      <span class="dot2"></span><span id="srcBadgeText">Snapshot data</span>
+    </button>
+    <div class="toolbtns">
+      <button class="iconbtn" id="btnCsv">Download CSV</button>
+      <button class="iconbtn" id="btnPrint">Print / Save PDF</button>
+    </div>
+    <span class="badge">For BDM store visits</span>
+  </div>
+
+  <div class="kpis" id="kpiStrip"></div>
+
+  <div class="filterbar">
+    <div class="filterrow">
+      <div class="filtergroup">
+        <span class="flabel">Weeks</span>
+        <div class="seg" id="segRange">
+          <button data-range="all" class="active">All</button>
+          <button data-range="4">Last 4</button>
+          <button data-range="8">Last 8</button>
+          <button data-range="custom">Custom</button>
+        </div>
+        <div class="range-custom" id="rangeCustom">
+          <select id="fromWeek"></select>
+          <span style="color:var(--text-muted);font-size:12px;">to</span>
+          <select id="toWeek"></select>
+        </div>
+      </div>
+
+      <div class="filtergroup">
+        <span class="flabel">Units</span>
+        <div class="seg" id="segUnits">
+          <button data-unit="net" class="active">Net</button>
+          <button data-unit="gross">Gross</button>
+        </div>
+      </div>
+
+      <div class="filtergroup">
+        <span class="flabel">Brand</span>
+        <button class="pill active" data-brand="__all__">All</button>
+        <span id="brandPills"></span>
+      </div>
+
+      <div class="filtergroup dropdown" id="productDropdown">
+        <span class="flabel">Product</span>
+        <button class="dropdown-btn" id="productBtn">All products <span style="opacity:.6;">&#9662;</span></button>
+        <div class="dropdown-panel" id="productPanel">
+          <input type="text" id="productSearch" placeholder="Search item code or description&hellip;">
+          <div class="dropdown-actions">
+            <button class="linklike" id="productAll">Select all</button>
+            <button class="linklike" id="productNone">Clear</button>
+          </div>
+          <div id="productList"></div>
+        </div>
+      </div>
+
+      <button class="linklike reset-link" id="btnReset">Reset filters</button>
+    </div>
+    <div class="filter-summary" id="filterSummary"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Weekly Trend &mdash; All Stores</h2>
+      <span class="hint">Total Bing Lee units invoiced per week (all channels), matching the filters above</span>
+    </div>
+    <div class="chart-wrap" id="companyChart"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Store Rankings</h2>
+      <span class="hint">Total units in range &middot; trend compares the most recent weeks to the weeks before &middot; click a store to open it in Store Detail</span>
+    </div>
+    <div class="channel-toggle-row">
+      <div class="seg" id="segChannel">
+        <button data-channel="stores" class="active">Stores only</button>
+        <button data-channel="all">Include Online Sales</button>
+      </div>
+    </div>
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="panel">
+    <div class="tabs" id="tabs">
+      <button data-tab="detail" class="active">Store Detail</button>
+      <button data-tab="compare">Compare Stores</button>
+    </div>
+
+    <div class="tabpane active" id="tab-detail">
+      <div class="controls">
+        <div class="field">
+          <label for="storeSelect">Store</label>
+          <select id="storeSelect"></select>
+        </div>
+      </div>
+      <div class="mini-kpis" id="storeKpis"></div>
+      <div class="two-col">
+        <div>
+          <div class="panel-head" style="margin-bottom:10px;"><h2 style="font-size:12.5px;">Weekly units at this store</h2></div>
+          <div class="chart-wrap" id="storeChart"></div>
+        </div>
+        <div>
+          <div class="panel-head" style="margin-bottom:10px;"><h2 style="font-size:12.5px;">Products sold at this store</h2></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Item code</th><th>Description</th><th>Brand</th><th class="num">Units</th></tr></thead>
+              <tbody id="productTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpane" id="tab-compare">
+      <div class="chip-picker" id="compareChips"></div>
+      <div class="add-store dropdown" id="storeAddDropdown">
+        <button class="dropdown-btn" id="storeAddBtn">+ Add a store to compare</button>
+        <div class="dropdown-panel" id="storeAddPanel">
+          <input type="text" id="storeAddSearch" placeholder="Search stores&hellip;">
+          <div id="storeAddList"></div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="compareChart" style="margin-top:16px;"></div>
+      <div class="legend" id="compareLegend"></div>
+      <div class="table-scroll" style="margin-top:18px;">
+        <table>
+          <thead><tr><th>Store</th><th class="num">Total units</th><th class="num">Active weeks</th><th class="num">Avg / active wk</th><th>Best week</th></tr></thead>
+          <tbody id="compareTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footerNote">Source: 12 weekly Bing Lee sales-out exports. Quantities are invoiced units. Returns/adjustment lines are shown separately, not hidden.</footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+/* ============================================================
+   CONFIG — live data source.
+   Project: "Bunnings-Weekly-Report" (vggbzpvgukprwpopewot.supabase.co)
+   — reused for Bing Lee since it's another retailer, same pattern
+   as the Bunnings dashboard.
+   Table: bing_lee_sales_rows (see accompanying schema.sql).
+   Key: publishable key (safe for the browser; RLS restricts it to
+   read-only via the "Public read access" policy).
+   ============================================================ */
+const SUPABASE_URL = 'https://vggbzpvgukprwpopewot.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_hG5I11kQ9k5IBYrHaCTkRg_WrwCXYAG';
+const SUPABASE_TABLE = 'bing_lee_sales_rows';
+
+/* ============ Embedded fallback snapshot (12 weeks, captured 21 Sep 2026) ============ */
+const EMBEDDED_DATA = {"weeks":["6/7/2026","13/7/2026","20/7/2026","27/7/2026","3/8/2026","10/8/2026","17/8/2026","24/8/2026","31/8/2026","7/9/2026","14/9/2026","21/9/2026"],"weekLabels":["06 Jul","13 Jul","20 Jul","27 Jul","03 Aug","10 Aug","17 Aug","24 Aug","31 Aug","07 Sep","14 Sep","21 Sep"],"stores":["Balgowlah","Bankstown","Belconnen","Blacktown","Burwood","Campbelltown","Carlingford","Casula","Clearance Outlet","Fyshwick","Hornsby","Liverpool","Macquarie Park","Marsden Park","Mona Vale","Moore Park","Mount Druitt","Old Guildford","Online Sales","Penrith","Prospect","Rhodes","Rockdale","Taren Point","West Gosford"],"brands":["DDL","PHILIPS","ZIGBANG"],"products":[{"item":"DDA270X-2TXS3","desc":"2K DUAL CAM VIDEO DOORBELL","brand":"PHILIPS"},{"item":"DDL-P6006S","desc":"WIFI DIGITAL DOORLOCK","brand":"DDL"},{"item":"DDL250X-14HWC","desc":"PALM RECOGNITION SMART LOCK","brand":"PHILIPS"},{"item":"DDL610-5HBS","desc":"SMART HANDLE DOORLOCK + DBELL","brand":"PHILIPS"},{"item":"DDL702-8HWS-B","desc":"EASYKEY WIFI DLOCK + DBELL BLK","brand":"PHILIPS"},{"item":"DDL709-FVP-7HWS-B","desc":"EASYKEY WIFI DLOCK + DBELL BLK","brand":"PHILIPS"},{"item":"DDL709-FVP-7HWS-C","desc":"EASYKEY WIFI DLOCK + DBELL COP","brand":"PHILIPS"},{"item":"DDL720-MVP-17HWS","desc":"SMART DOOR LOCK PALM SECURITY","brand":"PHILIPS"},{"item":"DDL801-5HBS","desc":"PUSH/PULL REMOTE LOCK + DBELL","brand":"PHILIPS"},{"item":"DDL902-MFVP-11HWS-B","desc":"PALM AND FACE RECOG DLOCK BLK","brand":"PHILIPS"},{"item":"DDL902-MFVP-11HWS-G","desc":"PALM AND FACE RECOG DLOCK GOLD","brand":"PHILIPS"},{"item":"SBX202-5C0-GOLD","desc":"SMARTSAFE TELESCOPIC HNDL SML","brand":"PHILIPS"},{"item":"SBX202-5C0-GREY","desc":"SMARTSAFE TELESCOPIC HNDL SML","brand":"PHILIPS"},{"item":"SBX202-6C0-GREY","desc":"SMARTSAFE TELESCOPIC HNDL MED","brand":"PHILIPS"},{"item":"SBX202-7C0-GOLD","desc":"SMARTSAFE TELESCOPIC HNDL LRG","brand":"PHILIPS"},{"item":"SBX602-6CU-GOLD","desc":"SMARTSAFE W WIFI SML","brand":"PHILIPS"},{"item":"SBX602-8CU-GOLD","desc":"SMARTSAFE W WIFI LRG","brand":"PHILIPS"},{"item":"SHP-DP609AS/ZE","desc":"ZIGBANG SHP-DP609 SMART LOCK","brand":"ZIGBANG"},{"item":"SHP-R80FCLP/ZE","desc":"ZIGBANG SHPR80 SMART DOOR LOCK","brand":"ZIGBANG"}],"rows":[[6,11,1,0,-1.0],[6,8,0,1,1.0],[6,18,1,2,1.0],[6,18,1,3,1.0],[6,3,1,3,1.0],[6,20,1,5,3.0],[6,1,1,5,2.0],[6,13,1,5,2.0],[6,7,1,5,2.0],[6,17,1,5,3.0],[6,21,1,5,2.0],[6,5,1,7,1.0],[6,6,1,7,1.0],[6,7,1,7,1.0],[6,3,1,8,1.0],[6,13,1,8,2.0],[6,1,1,8,1.0],[6,18,1,9,1.0],[6,11,1,10,1.0],[6,17,2,17,1.0],[6,13,2,17,1.0],[6,12,2,18,1.0],[6,19,2,18,1.0],[6,18,2,18,1.0],[6,17,2,18,1.0],[6,5,2,18,1.0],[7,18,1,3,1.0],[7,22,1,3,1.0],[7,7,1,5,2.0],[7,19,1,5,1.0],[7,13,1,5,5.0],[7,18,1,5,1.0],[7,5,1,5,1.0],[7,1,1,6,-1.0],[7,13,1,7,1.0],[7,5,1,9,1.0],[7,13,1,9,1.0],[7,9,1,10,1.0],[7,18,1,11,1.0],[7,18,1,13,1.0],[7,3,2,17,2.0],[7,13,2,18,1.0],[7,18,2,18,1.0],[10,18,1,2,1.0],[10,12,1,3,1.0],[10,19,1,5,2.0],[10,4,1,5,1.0],[10,18,1,5,3.0],[10,21,1,5,2.0],[10,13,1,5,1.0],[10,17,1,5,1.0],[10,15,1,5,1.0],[10,12,1,5,1.0],[10,20,1,5,-1.0],[10,1,1,5,20.0],[10,24,1,7,1.0],[10,7,1,8,1.0],[10,1,1,9,1.0],[10,12,1,9,1.0],[10,4,1,10,1.0],[10,13,1,10,1.0],[10,18,1,15,1.0],[10,17,1,16,1.0],[10,16,2,17,1.0],[10,18,2,17,1.0],[10,20,2,18,1.0],[10,23,2,18,1.0],[10,3,2,18,1.0],[10,22,2,18,2.0],[11,18,1,2,1.0],[11,12,1,3,1.0],[11,2,1,5,1.0],[11,1,1,5,1.0],[11,13,1,5,3.0],[11,17,1,6,2.0],[11,19,1,6,1.0],[11,2,1,6,1.0],[11,3,1,6,3.0],[11,13,1,6,6.0],[11,20,1,6,1.0],[11,11,1,6,4.0],[11,7,1,6,3.0],[11,5,1,6,1.0],[11,10,1,6,1.0],[11,18,1,6,2.0],[11,22,1,6,2.0],[11,13,1,7,1.0],[11,18,1,7,1.0],[11,4,1,10,0.0],[11,18,1,10,1.0],[11,18,1,12,1.0],[11,21,2,17,1.0],[11,18,2,17,2.0],[11,2,2,18,1.0],[11,13,2,18,1.0],[11,18,2,18,1.0],[11,5,2,18,1.0],[1,15,1,5,1.0],[1,20,1,5,2.0],[1,10,1,5,1.0],[1,0,1,5,2.0],[1,1,1,5,1.0],[1,19,1,5,-1.0],[1,17,1,7,2.0],[1,21,1,7,1.0],[1,5,1,7,1.0],[1,16,1,9,1.0],[1,7,1,14,1.0],[1,18,1,14,2.0],[1,13,2,17,1.0],[1,5,2,17,1.0],[1,3,2,17,1.0],[1,2,2,18,1.0],[1,6,2,18,1.0],[1,17,2,18,1.0],[1,11,2,18,1.0],[8,7,1,2,1.0],[8,3,1,3,1.0],[8,18,1,3,1.0],[8,4,1,3,1.0],[8,13,1,5,1.0],[8,18,1,5,2.0],[8,15,1,5,1.0],[8,0,1,5,1.0],[8,5,1,5,1.0],[8,3,1,5,2.0],[8,11,1,5,1.0],[8,7,1,5,3.0],[8,2,1,5,1.0],[8,22,1,5,4.0],[8,3,1,7,1.0],[8,8,1,7,1.0],[8,18,1,7,1.0],[8,19,1,8,1.0],[8,22,1,8,1.0],[8,6,1,8,1.0],[8,4,1,10,1.0],[8,18,1,10,1.0],[8,9,2,17,1.0],[8,11,2,17,1.0],[8,18,2,18,1.0],[8,23,2,18,1.0],[8,7,2,18,1.0],[8,2,2,18,1.0],[0,21,1,5,1.0],[0,1,1,5,1.0],[0,1,1,6,-1.0],[0,18,1,7,1.0],[0,3,1,7,1.0],[0,17,1,7,4.0],[0,1,1,9,1.0],[0,23,1,9,2.0],[0,13,2,17,1.0],[0,4,2,18,2.0],[5,11,1,0,1.0],[5,12,1,3,1.0],[5,5,1,4,1.0],[5,17,1,5,-1.0],[5,13,1,5,1.0],[5,22,1,5,1.0],[5,6,1,5,1.0],[5,3,1,7,1.0],[5,12,1,7,1.0],[5,7,1,7,1.0],[5,22,1,7,1.0],[5,17,1,7,1.0],[5,13,1,8,1.0],[5,15,1,8,1.0],[5,14,1,9,1.0],[5,5,1,9,1.0],[5,18,1,10,2.0],[5,16,1,14,1.0],[5,18,1,15,1.0],[5,15,2,17,2.0],[5,13,2,17,1.0],[5,2,2,17,1.0],[5,6,2,18,2.0],[5,18,2,18,1.0],[5,7,2,18,0.0],[9,3,1,2,1.0],[9,7,1,3,1.0],[9,4,1,3,0.0],[9,3,1,3,-1.0],[9,1,1,5,5.0],[9,13,1,5,7.0],[9,22,1,5,1.0],[9,17,1,5,1.0],[9,18,1,5,1.0],[9,5,1,5,2.0],[9,2,1,5,1.0],[9,19,1,5,-1.0],[9,7,1,5,-1.0],[9,22,1,6,1.0],[9,4,1,7,1.0],[9,18,1,7,2.0],[9,1,1,10,1.0],[9,5,1,10,1.0],[9,11,1,10,1.0],[9,18,1,14,1.0],[9,3,2,17,2.0],[9,21,2,17,1.0],[9,18,2,17,1.0],[9,0,2,17,1.0],[9,12,2,18,1.0],[9,17,2,18,1.0],[9,1,2,18,2.0],[9,22,2,18,3.0],[4,13,1,3,1.0],[4,15,1,3,1.0],[4,19,1,5,1.0],[4,11,1,5,1.0],[4,4,1,5,1.0],[4,17,1,7,2.0],[4,18,1,7,1.0],[4,5,1,7,1.0],[4,18,1,9,1.0],[4,19,1,9,0.0],[4,21,1,9,1.0],[4,18,1,10,1.0],[4,3,1,10,1.0],[4,16,1,10,1.0],[4,19,2,17,1.0],[4,17,2,18,1.0],[4,7,2,18,1.0],[3,18,1,5,1.0],[3,7,1,5,1.0],[3,5,1,5,1.0],[3,13,1,5,2.0],[3,5,1,7,1.0],[3,18,1,7,-1.0],[3,3,1,7,1.0],[3,18,1,9,2.0],[3,18,1,11,1.0],[3,18,1,12,1.0],[3,18,1,13,1.0],[3,18,1,14,1.0],[3,23,2,17,1.0],[3,4,2,17,1.0],[3,5,2,17,2.0],[3,3,2,17,3.0],[3,11,2,18,1.0],[3,13,2,18,1.0],[3,12,2,18,1.0],[3,23,2,18,1.0],[3,7,2,18,1.0],[2,10,1,0,1.0],[2,13,1,5,1.0],[2,1,1,5,1.0],[2,7,1,5,1.0],[2,18,1,5,1.0],[2,5,1,7,1.0],[2,20,1,7,1.0],[2,3,1,7,2.0],[2,9,1,9,1.0],[2,18,1,9,2.0],[2,18,1,10,2.0],[2,7,1,11,1.0],[2,18,1,13,1.0],[2,18,1,15,1.0],[2,18,1,16,2.0],[2,17,2,17,2.0],[2,5,2,17,1.0],[2,13,2,18,1.0],[2,10,2,18,1.0],[2,4,2,18,1.0]]};
+
+let DATA = EMBEDDED_DATA;
+let dataSource = 'snapshot';
+
+const tooltip = document.getElementById('tooltip');
+const SERIES_COLORS = ['var(--s1)','var(--s2)','var(--s3)','var(--s4)','var(--s5)','var(--s6)'];
+const LS_KEY = 'bingLeeDashboard.lastStore';
+
+function fmt(n){
+  n = Math.round(n*10)/10;
+  return n % 1 === 0 ? n.toFixed(0) : n.toFixed(1);
+}
+function niceMax(v){
+  if (v <= 0) return 4;
+  const steps = [1,2,4,5,8,10,15,20,25,30,40,50,60,80,100,120,150,200,250,300,400,500];
+  for (const s of steps) if (s >= v) return s;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  return Math.ceil(v / mag) * mag;
+}
+function showTooltip(evt, container, html){
+  const rect = container.getBoundingClientRect();
+  tooltip.innerHTML = html;
+  tooltip.style.left = (evt.clientX - rect.left) + 'px';
+  tooltip.style.top = (evt.clientY - rect.top) + 'px';
+  tooltip.classList.add('show');
+}
+function hideTooltip(){ tooltip.classList.remove('show'); }
+function saveLastStore(name){ try { localStorage.setItem(LS_KEY, name); } catch(e){} }
+function loadLastStore(){ try { return localStorage.getItem(LS_KEY); } catch(e){ return null; } }
+
+/* ============ Live data loading (Supabase, with graceful fallback) ============ */
+async function tryLoadLive(){
+  if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.indexOf('REPLACE') === 0) return null;
+  if (typeof supabase === 'undefined') return null;
+  try {
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data, error } = await client
+      .from(SUPABASE_TABLE)
+      .select('report_date,store,brand,item_code,description,invoiced_qty')
+      .limit(50000);
+    if (error || !data || data.length === 0) return null;
+    return transformLiveRows(data);
+  } catch (e){
+    return null;
+  }
+}
+function transformLiveRows(records){
+  const weeks = [...new Set(records.map(r=>r.report_date))].sort();
+  const weekLabels = weeks.map(w=>{
+    const d = new Date(w+'T00:00:00');
+    return d.toLocaleDateString('en-AU',{day:'2-digit',month:'short'});
+  });
+  const stores = [...new Set(records.map(r=>r.store))].sort();
+  const brands = [...new Set(records.map(r=>r.brand))].sort();
+  const prodMap = new Map();
+  records.forEach(r=>{
+    const key = r.item_code+'|'+r.description+'|'+r.brand;
+    if (!prodMap.has(key)) prodMap.set(key, {item:r.item_code, desc:r.description, brand:r.brand});
+  });
+  const products = [...prodMap.values()];
+  const weekIdx = {}; weeks.forEach((w,i)=>weekIdx[w]=i);
+  const storeIdx = {}; stores.forEach((s,i)=>storeIdx[s]=i);
+  const brandIdx = {}; brands.forEach((b,i)=>brandIdx[b]=i);
+  const prodIdx = new Map(); products.forEach((p,i)=>prodIdx.set(p.item+'|'+p.desc+'|'+p.brand, i));
+  const rows = records.map(r=>[
+    weekIdx[r.report_date], storeIdx[r.store], brandIdx[r.brand],
+    prodIdx.get(r.item_code+'|'+r.description+'|'+r.brand),
+    Number(r.invoiced_qty)
+  ]);
+  return { weeks, weekLabels, stores, brands, products, rows };
+}
+
+/* ============ FILTER STATE ============ */
+const state = {
+  weekStart: 0, weekEnd: 0, rangeMode: 'all',
+  brands: new Set(), products: new Set(),
+  tab: 'detail', selectedStore: null, compareStores: [],
+  unitMode: 'net', includeOnline: false
+};
+function resetStateDefaults(){
+  state.weekStart = 0; state.weekEnd = DATA.weeks.length - 1; state.rangeMode = 'all';
+  state.brands = new Set(DATA.brands);
+  state.products = new Set(DATA.products.map((_, i) => i));
+  state.unitMode = 'net'; state.includeOnline = false;
+}
+
+function activeRows(){
+  return DATA.rows.filter(([w,s,b,p,q]) =>
+    w >= state.weekStart && w <= state.weekEnd &&
+    state.brands.has(DATA.brands[b]) &&
+    state.products.has(p)
+  );
+}
+
+function aggregate(rows){
+  const activeWeeks = DATA.weeks.slice(state.weekStart, state.weekEnd + 1);
+  const activeLabels = DATA.weekLabels.slice(state.weekStart, state.weekEnd + 1);
+  const n = activeWeeks.length;
+  const weekTotals = new Array(n).fill(0);
+  const storeTotal = {}, storeWeek = {}, storeProduct = {};
+  DATA.stores.forEach(s => { storeTotal[s] = 0; storeWeek[s] = new Array(n).fill(0); storeProduct[s] = new Map(); });
+  let grand = 0, returns = 0;
+  rows.forEach(([w,s,b,p,q]) => {
+    if (q < 0) returns += -q;
+    const useQ = state.unitMode === 'gross' ? Math.max(q, 0) : q;
+    if (useQ === 0) return;
+    const wi = w - state.weekStart;
+    const storeName = DATA.stores[s];
+    weekTotals[wi] += useQ;
+    storeTotal[storeName] += useQ;
+    storeWeek[storeName][wi] += useQ;
+    storeProduct[storeName].set(p, (storeProduct[storeName].get(p) || 0) + useQ);
+    grand += useQ;
+  });
+  return { activeWeeks, activeLabels, weekTotals, storeTotal, storeWeek, storeProduct, grand, n, returns };
+}
+
+/* Trend/dormancy uses the FULL week history (ignoring the Weeks filter, respecting brand/product/unit filters)
+   so a store's "recent momentum" reads the same whether or not someone has narrowed the date range for other reasons. */
+function computeTrends(){
+  const rows = DATA.rows.filter(([w,s,b,p,q]) => state.brands.has(DATA.brands[b]) && state.products.has(p));
+  const n = DATA.weeks.length;
+  const storeWeekFull = {};
+  DATA.stores.forEach(s => { storeWeekFull[s] = new Array(n).fill(0); });
+  rows.forEach(([w,s,b,p,q]) => {
+    const useQ = state.unitMode === 'gross' ? Math.max(q, 0) : q;
+    storeWeekFull[DATA.stores[s]][w] += useQ;
+  });
+  const win = n >= 2 ? Math.max(1, Math.min(3, Math.floor(n / 2))) : 0;
+  const trends = {};
+  DATA.stores.forEach(s => {
+    const weekly = storeWeekFull[s];
+    const total = weekly.reduce((a,b)=>a+b,0);
+    if (win === 0){ trends[s] = { pct:null, dormant:false, isNew:false }; return; }
+    const recent = weekly.slice(n - win);
+    const prior = weekly.slice(Math.max(0, n - 2*win), n - win);
+    const recentSum = recent.reduce((a,b)=>a+b,0);
+    const priorSum = prior.reduce((a,b)=>a+b,0);
+    const dormant = total > 0 && recentSum === 0;
+    let pct = null, isNew = false;
+    if (priorSum > 0) pct = ((recentSum - priorSum) / priorSum) * 100;
+    else if (recentSum > 0) isNew = true;
+    trends[s] = { pct, dormant, isNew, win };
+  });
+  return trends;
+}
+function trendBadgeHtml(t){
+  if (!t) return '';
+  if (t.dormant) return `<span class="trend flag">Needs attention</span>`;
+  if (t.isNew) return `<span class="trend new">New</span>`;
+  if (t.pct === null) return '';
+  if (Math.abs(t.pct) < 3) return `<span class="trend flat">&#8213; flat</span>`;
+  const dir = t.pct > 0 ? 'up' : 'down';
+  const arrow = t.pct > 0 ? '&#9650;' : '&#9660;';
+  return `<span class="trend ${dir}">${arrow} ${Math.abs(Math.round(t.pct))}%</span>`;
+}
+
+/* ============ BAR CHART ============ */
+function renderBarChart(container, values, labels){
+  if (values.every(v => v === 0)){
+    container.innerHTML = '<div class="empty-state">No units match the current filters</div>';
+    return;
+  }
+  const W = 900, H = 220;
+  const padL = 34, padR = 10, padT = 18, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = values.length;
+  const max = niceMax(Math.max(...values, 1));
+  const band = plotW / n;
+  const barW = Math.min(26, band * 0.5);
+  const ticks = 4;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weekly units bar chart">`;
+  for (let i=0;i<=ticks;i++){
+    const val = (max/ticks)*i;
+    const y = padT + plotH - (val/max)*plotH;
+    svg += `<line class="gridline" x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    svg += `<text class="axis-label" x="${padL-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(val)}</text>`;
+  }
+  const maxIdx = values.indexOf(Math.max(...values));
+  values.forEach((v,i)=>{
+    const x = padL + band*i + (band-barW)/2;
+    const h = max>0 ? (v/max)*plotH : 0;
+    const cls = v>0 ? 'bar' : 'bar zero';
+    const barH = Math.max(h, v>0 ? 2 : 1.5);
+    const barY = padT + plotH - barH;
+    svg += `<rect class="${cls}" data-i="${i}" x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="4" ry="4"/>`;
+    if (i===maxIdx && v>0){
+      svg += `<text class="value-label" x="${(x+barW/2).toFixed(1)}" y="${(barY-6).toFixed(1)}" text-anchor="middle">${fmt(v)}</text>`;
+    }
+    const showEvery = n > 8 ? 2 : 1;
+    if (i % showEvery === 0 || i===n-1){
+      svg += `<text class="axis-label" x="${(x+barW/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${labels[i]}</text>`;
+    }
+  });
+  svg += `<line class="baseline" x1="${padL}" x2="${W-padR}" y1="${(padT+plotH).toFixed(1)}" y2="${(padT+plotH).toFixed(1)}"/>`;
+  svg += `</svg>`;
+  container.innerHTML = svg;
+  container.querySelectorAll('.bar').forEach(bar=>{
+    bar.addEventListener('mousemove', (evt)=>{
+      const i = +bar.getAttribute('data-i');
+      showTooltip(evt, container, `${labels[i]}<span class="sub">${fmt(values[i])} unit${values[i]==1?'':'s'}</span>`);
+    });
+    bar.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+/* ============ LINE CHART (compare) ============ */
+function renderLineChart(container, series, labels){
+  if (series.length === 0){
+    container.innerHTML = '<div class="compare-empty">Add stores above to compare their weekly history</div>';
+    return;
+  }
+  const allVals = series.flatMap(s=>s.values);
+  if (allVals.every(v=>v===0)){
+    container.innerHTML = '<div class="empty-state">No units match the current filters for these stores</div>';
+    return;
+  }
+  const W = 900, H = 260;
+  const padL = 34, padR = 16, padT = 18, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = labels.length;
+  const max = niceMax(Math.max(...allVals, 1));
+  const ticks = 4;
+  const xAt = i => padL + (n===1 ? plotW/2 : (plotW/(n-1))*i);
+  const yAt = v => padT + plotH - (v/max)*plotH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Store comparison line chart">`;
+  for (let i=0;i<=ticks;i++){
+    const val = (max/ticks)*i;
+    const y = yAt(val);
+    svg += `<line class="gridline" x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    svg += `<text class="axis-label" x="${padL-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(val)}</text>`;
+  }
+  const showEvery = n > 8 ? 2 : 1;
+  labels.forEach((lb,i)=>{
+    if (i % showEvery === 0 || i===n-1){
+      svg += `<text class="axis-label" x="${xAt(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${lb}</text>`;
+    }
+  });
+  svg += `<line class="baseline" x1="${padL}" x2="${W-padR}" y1="${(padT+plotH).toFixed(1)}" y2="${(padT+plotH).toFixed(1)}"/>`;
+
+  series.forEach((s,si)=>{
+    const color = SERIES_COLORS[si % SERIES_COLORS.length];
+    let d = '';
+    s.values.forEach((v,i)=>{
+      const x = xAt(i), y = yAt(v);
+      d += (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    });
+    svg += `<path class="line-path" d="${d}" stroke="${color}"/>`;
+    s.values.forEach((v,i)=>{
+      const x = xAt(i), y = yAt(v);
+      svg += `<circle class="line-dot" data-si="${si}" data-i="${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/>`;
+    });
+  });
+  svg += `</svg>`;
+  container.innerHTML = svg;
+  container.querySelectorAll('.line-dot').forEach(dot=>{
+    dot.addEventListener('mousemove', (evt)=>{
+      const si = +dot.getAttribute('data-si'), i = +dot.getAttribute('data-i');
+      const s = series[si];
+      showTooltip(evt, container, `${s.name} &middot; ${labels[i]}<span class="sub">${fmt(s.values[i])} unit${s.values[i]==1?'':'s'}</span>`);
+    });
+    dot.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+/* ============ FILTER BAR: brand pills ============ */
+function renderBrandPills(){
+  const el = document.getElementById('brandPills');
+  el.innerHTML = DATA.brands.map(b=>`<button class="pill" data-brand="${b}">${b}</button>`).join('');
+}
+function syncBrandPills(){
+  const allBtn = document.querySelector('[data-brand="__all__"]');
+  const isAll = state.brands.size === DATA.brands.length;
+  allBtn.classList.toggle('active', isAll);
+  document.querySelectorAll('#brandPills .pill').forEach(btn=>{
+    btn.classList.toggle('active', !isAll && state.brands.has(btn.getAttribute('data-brand')));
+  });
+}
+function wireBrandPills(){
+  document.querySelector('[data-brand="__all__"]').addEventListener('click', ()=>{
+    state.brands = new Set(DATA.brands);
+    syncBrandPills(); renderAll();
+  });
+  document.getElementById('brandPills').addEventListener('click', (evt)=>{
+    const btn = evt.target.closest('.pill');
+    if (!btn) return;
+    const b = btn.getAttribute('data-brand');
+    if (state.brands.size === DATA.brands.length){
+      state.brands = new Set([b]);
+    } else if (state.brands.has(b)){
+      state.brands.delete(b);
+      if (state.brands.size === 0) state.brands = new Set(DATA.brands);
+    } else {
+      state.brands.add(b);
+    }
+    syncBrandPills(); renderAll();
+  });
+}
+
+/* ============ FILTER BAR: product dropdown ============ */
+function renderProductList(filterText){
+  const listEl = document.getElementById('productList');
+  const ft = (filterText||'').toLowerCase();
+  const items = DATA.products.map((p,i)=>({...p,i})).filter(p =>
+    !ft || p.item.toLowerCase().includes(ft) || p.desc.toLowerCase().includes(ft)
+  );
+  listEl.innerHTML = items.map(p => `
+    <label class="chk-row">
+      <input type="checkbox" data-pi="${p.i}" ${state.products.has(p.i) ? 'checked' : ''}>
+      <span><span class="ci-item">${p.item}</span><span class="ci-desc">${p.desc}</span></span>
+    </label>
+  `).join('') || '<div style="padding:10px;color:var(--text-muted);font-size:12px;">No matches</div>';
+  listEl.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const i = +cb.getAttribute('data-pi');
+      if (cb.checked) state.products.add(i); else state.products.delete(i);
+      syncProductBtn(); renderAll();
+    });
+  });
+}
+function syncProductBtn(){
+  const btn = document.getElementById('productBtn');
+  const isAll = state.products.size === DATA.products.length;
+  btn.innerHTML = (isAll ? 'All products' : state.products.size + ' product' + (state.products.size===1?'':'s') + ' selected') + ' <span style="opacity:.6;">&#9662;</span>';
+  btn.classList.toggle('active', !isAll);
+}
+function wireProductDropdown(){
+  const btn = document.getElementById('productBtn');
+  const panel = document.getElementById('productPanel');
+  btn.addEventListener('click', (e)=>{ e.stopPropagation(); panel.classList.toggle('show'); });
+  document.addEventListener('click', (e)=>{ if (!document.getElementById('productDropdown').contains(e.target)) panel.classList.remove('show'); });
+  document.getElementById('productSearch').addEventListener('input', (e)=> renderProductList(e.target.value));
+  document.getElementById('productAll').addEventListener('click', ()=>{
+    state.products = new Set(DATA.products.map((_,i)=>i));
+    renderProductList(document.getElementById('productSearch').value); syncProductBtn(); renderAll();
+  });
+  document.getElementById('productNone').addEventListener('click', ()=>{
+    state.products = new Set();
+    renderProductList(document.getElementById('productSearch').value);
+    syncProductBtn();
+    renderAll();
+  });
+  renderProductList('');
+}
+
+/* ============ FILTER BAR: unit mode + channel toggle ============ */
+function wireUnitToggle(){
+  document.getElementById('segUnits').addEventListener('click', (evt)=>{
+    const btn = evt.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#segUnits button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.unitMode = btn.getAttribute('data-unit');
+    renderAll();
+  });
+}
+function wireChannelToggle(){
+  document.getElementById('segChannel').addEventListener('click', (evt)=>{
+    const btn = evt.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#segChannel button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.includeOnline = btn.getAttribute('data-channel') === 'all';
+    renderAll();
+  });
+}
+
+/* ============ FILTER BAR: week range ============ */
+function wireWeekRange(){
+  const fromSel = document.getElementById('fromWeek');
+  const toSel = document.getElementById('toWeek');
+  fromSel.innerHTML = DATA.weekLabels.map((l,i)=>`<option value="${i}">${l}</option>`).join('');
+  toSel.innerHTML = DATA.weekLabels.map((l,i)=>`<option value="${i}">${l}</option>`).join('');
+  toSel.value = DATA.weeks.length - 1;
+
+  document.getElementById('segRange').addEventListener('click', (evt)=>{
+    const btn = evt.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#segRange button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = btn.getAttribute('data-range');
+    state.rangeMode = mode;
+    const rc = document.getElementById('rangeCustom');
+    if (mode === 'all'){ state.weekStart = 0; state.weekEnd = DATA.weeks.length-1; rc.classList.remove('show'); }
+    else if (mode === '4'){ state.weekEnd = DATA.weeks.length-1; state.weekStart = Math.max(0, state.weekEnd-3); rc.classList.remove('show'); }
+    else if (mode === '8'){ state.weekEnd = DATA.weeks.length-1; state.weekStart = Math.max(0, state.weekEnd-7); rc.classList.remove('show'); }
+    else if (mode === 'custom'){ rc.classList.add('show'); fromSel.value = state.weekStart; toSel.value = state.weekEnd; }
+    renderAll();
+  });
+
+  fromSel.addEventListener('change', ()=>{
+    let f = +fromSel.value, t = +toSel.value;
+    if (f > t) { t = f; toSel.value = t; }
+    state.weekStart = f; state.weekEnd = t;
+    renderAll();
+  });
+  toSel.addEventListener('change', ()=>{
+    let f = +fromSel.value, t = +toSel.value;
+    if (t < f) { f = t; fromSel.value = f; }
+    state.weekStart = f; state.weekEnd = t;
+    renderAll();
+  });
+}
+
+function resetFilters(){
+  resetStateDefaults();
+  document.querySelectorAll('#segRange button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-range')==='all'));
+  document.getElementById('rangeCustom').classList.remove('show');
+  document.querySelectorAll('#segUnits button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-unit')==='net'));
+  document.querySelectorAll('#segChannel button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-channel')==='stores'));
+  syncBrandPills();
+  renderProductList(''); syncProductBtn();
+  document.getElementById('productSearch').value = '';
+  renderAll();
+}
+
+/* ============ Filter summary + CSV/print ============ */
+function renderFilterSummary(agg){
+  const el = document.getElementById('filterSummary');
+  const wk = agg.activeLabels.length === DATA.weeks.length ? `All ${DATA.weeks.length} weeks` : `${agg.activeLabels[0]}–${agg.activeLabels[agg.activeLabels.length-1]} (${agg.activeLabels.length} wk${agg.activeLabels.length===1?'':'s'})`;
+  const brandTxt = state.brands.size === DATA.brands.length ? 'all brands' : [...state.brands].join(', ');
+  const prodTxt = state.products.size === DATA.products.length ? 'all products' : state.products.size + ' product' + (state.products.size===1?'':'s');
+  const unitTxt = state.unitMode === 'gross' ? 'gross units (before returns)' : 'net units (after returns)';
+  el.innerHTML = `Showing <b>${wk}</b> &middot; <b>${brandTxt}</b> &middot; <b>${prodTxt}</b> &middot; <b>${unitTxt}</b> &middot; <b>${fmt(agg.grand)}</b> units total`;
+}
+
+function exportCsv(){
+  const rows = activeRows();
+  let csv = 'Report Date,Brand,Item Code,Description,Store,Invoiced Quantity\n';
+  rows.forEach(([w,s,b,p,q])=>{
+    const prod = DATA.products[p];
+    const line = [DATA.weeks[w], DATA.brands[b], prod.item, prod.desc, DATA.stores[s], q]
+      .map(v => typeof v === 'string' && (v.includes(',') || v.includes('"')) ? '"'+v.replace(/"/g,'""')+'"' : v)
+      .join(',');
+    csv += line + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bing-lee-sales-filtered.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============ KPI strip ============ */
+function renderKpis(agg){
+  const el = document.getElementById('kpiStrip');
+  const ranked = Object.entries(agg.storeTotal)
+    .filter(([name,t]) => t > 0 && (state.includeOnline || name !== 'Online Sales'))
+    .sort((a,b)=>b[1]-a[1]);
+  const topStore = ranked[0] || ['—', 0];
+  const onlineTotal = agg.storeTotal['Online Sales'] || 0;
+  const unitLabel = state.unitMode === 'gross' ? 'Gross units' : 'Total units';
+  el.innerHTML = `
+    <div class="kpi"><p class="label">${unitLabel}</p><p class="value">${fmt(agg.grand)}</p><p class="sub">across ${agg.n} week${agg.n===1?'':'s'}</p></div>
+    <div class="kpi"><p class="label">Stores with sales</p><p class="value">${ranked.length}</p><p class="sub">of ${DATA.stores.length - 1} physical stores</p></div>
+    <div class="kpi"><p class="label">Weekly avg</p><p class="value">${fmt(agg.grand/agg.n)}</p><p class="sub">units / week, filtered</p></div>
+    <div class="kpi"><p class="label">Top store</p><p class="value">${topStore[0]}</p><p class="sub">${fmt(topStore[1])} units</p></div>
+    <div class="kpi"><p class="label">Returns</p><p class="value">${fmt(agg.returns)}</p><p class="sub">adjustment lines, this period</p></div>
+  `;
+  const from = DATA.weekLabels[0], to = DATA.weekLabels[DATA.weekLabels.length-1];
+  document.getElementById('dateRangeText').textContent = `Weekly unit sales by store · ${from} – ${to} · ${DATA.weeks.length} weekly reports`;
+}
+
+/* ============ Leaderboard ============ */
+function renderBoard(agg, trends){
+  const el = document.getElementById('board');
+  const ranked = Object.entries(agg.storeTotal)
+    .filter(([name,t]) => t > 0 && (state.includeOnline || name !== 'Online Sales'))
+    .sort((a,b)=>b[1]-a[1]);
+  if (ranked.length === 0){ el.innerHTML = '<div class="empty-state">No stores match the current filters</div>'; return; }
+  const max = ranked[0][1];
+  el.innerHTML = ranked.map(([name,total],i)=>{
+    const isOnline = name === 'Online Sales';
+    const t = isOnline ? null : trends[name];
+    return `
+    <div class="board-row${state.selectedStore===name && state.tab==='detail' ? ' active':''}" data-name="${name}">
+      <span class="board-rank">${i+1}</span>
+      <div class="board-main">
+        <div class="board-name">${name}${isOnline ? '<span class="tag-online">ONLINE</span>' : ''}</div>
+        <div class="board-track"><div class="board-fill" style="width:${(total/max*100).toFixed(1)}%"></div></div>
+      </div>
+      <div class="board-right">
+        <span class="board-value">${fmt(total)}</span>
+        ${t ? trendBadgeHtml(t) : ''}
+      </div>
+    </div>
+  `;}).join('');
+  el.querySelectorAll('.board-row').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      setTab('detail');
+      selectStore(row.getAttribute('data-name'), agg);
+    });
+  });
+}
+
+/* ============ Store select ============ */
+function renderSelect(agg){
+  const sel = document.getElementById('storeSelect');
+  const alpha = [...DATA.stores].sort((a,b)=>a.localeCompare(b));
+  const cur = sel.value;
+  sel.innerHTML = alpha.map(s=>{
+    const label = s === 'Online Sales' ? `${s} (online channel)` : s;
+    return `<option value="${s}">${label} — ${fmt(agg.storeTotal[s]||0)} units</option>`;
+  }).join('');
+  if (state.selectedStore && alpha.includes(state.selectedStore)) sel.value = state.selectedStore;
+  else if (cur && alpha.includes(cur)) sel.value = cur;
+}
+
+function selectStore(name, agg){
+  state.selectedStore = name;
+  saveLastStore(name);
+  document.getElementById('storeSelect').value = name;
+  document.querySelectorAll('.board-row').forEach(r=>r.classList.toggle('active', r.getAttribute('data-name')===name && state.tab==='detail'));
+  renderStoreDetail(agg);
+}
+
+function renderStoreDetail(agg){
+  const name = state.selectedStore;
+  if (!name) return;
+  const total = agg.storeTotal[name] || 0;
+  const weekly = agg.storeWeek[name] || new Array(agg.n).fill(0);
+  const weeksActive = weekly.filter(v=>v>0).length;
+  const avgActive = weeksActive ? total/weeksActive : 0;
+  const maxIdx = weekly.indexOf(Math.max(...weekly));
+  const bestLabel = weekly[maxIdx] > 0 ? agg.activeLabels[maxIdx] : '—';
+  const t = name === 'Online Sales' ? null : lastTrends[name];
+  const trendHtml = t ? (trendBadgeHtml(t) || '<span class="trend flat">no prior data</span>') : '<span class="trend flat">n/a &mdash; online channel</span>';
+
+  document.getElementById('storeKpis').innerHTML = `
+    <div class="mini-kpi"><p class="label">Total units</p><p class="value">${fmt(total)}</p></div>
+    <div class="mini-kpi"><p class="label">Active weeks</p><p class="value">${weeksActive} / ${agg.n}</p></div>
+    <div class="mini-kpi"><p class="label">Avg / active week</p><p class="value">${fmt(avgActive)}</p></div>
+    <div class="mini-kpi"><p class="label">Best week</p><p class="value">${fmt(weekly[maxIdx]||0)} <span style="font-size:11px;font-weight:500;color:var(--text-muted);">(${bestLabel})</span></p></div>
+    <div class="mini-kpi"><p class="label">Recent trend</p><p class="value small">${trendHtml}</p></div>
+  `;
+  renderBarChart(document.getElementById('storeChart'), weekly, agg.activeLabels);
+
+  const prodMap = agg.storeProduct[name] || new Map();
+  const entries = [...prodMap.entries()].map(([pi,qty])=>({...DATA.products[pi], qty})).sort((a,b)=>b.qty-a.qty);
+  const tbody = document.getElementById('productTable');
+  tbody.innerHTML = entries.length === 0
+    ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No product lines match the current filters</td></tr>`
+    : entries.map(p=>`<tr><td class="item">${p.item}</td><td class="desc">${p.desc}</td><td class="brand">${p.brand}</td><td class="num">${fmt(p.qty)}</td></tr>`).join('');
+}
+
+/* ============ Compare tab ============ */
+function renderCompareChips(){
+  const el = document.getElementById('compareChips');
+  el.innerHTML = state.compareStores.map((name,i)=>`
+    <span class="chip"><span class="sw" style="background:${SERIES_COLORS[i%SERIES_COLORS.length]}"></span>${name}<button data-name="${name}" aria-label="Remove">&times;</button></span>
+  `).join('');
+  el.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.compareStores = state.compareStores.filter(n=>n!==btn.getAttribute('data-name'));
+      renderCompareChips(); renderCompareTab(lastAgg);
+    });
+  });
+}
+function renderStoreAddList(filterText){
+  const listEl = document.getElementById('storeAddList');
+  const ft = (filterText||'').toLowerCase();
+  const opts = DATA.stores.filter(s => !state.compareStores.includes(s) && (!ft || s.toLowerCase().includes(ft)));
+  listEl.innerHTML = opts.length ? opts.map(s=>`<div class="chk-row" data-name="${s}"><span class="ci-item">${s}${s==='Online Sales'?' <span class=\"tag-online\">ONLINE</span>':''}</span></div>`).join('')
+    : '<div style="padding:10px;color:var(--text-muted);font-size:12px;">No matches</div>';
+  listEl.querySelectorAll('.chk-row').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      if (state.compareStores.length >= 6) return;
+      state.compareStores.push(row.getAttribute('data-name'));
+      renderCompareChips(); renderStoreAddList(document.getElementById('storeAddSearch').value);
+      renderCompareTab(lastAgg);
+      document.getElementById('storeAddPanel').classList.remove('show');
+    });
+  });
+}
+function wireCompareAdd(){
+  const btn = document.getElementById('storeAddBtn');
+  const panel = document.getElementById('storeAddPanel');
+  btn.addEventListener('click', (e)=>{ e.stopPropagation(); renderStoreAddList(''); panel.classList.toggle('show'); });
+  document.addEventListener('click', (e)=>{ if (!document.getElementById('storeAddDropdown').contains(e.target)) panel.classList.remove('show'); });
+  document.getElementById('storeAddSearch').addEventListener('input', (e)=>renderStoreAddList(e.target.value));
+}
+
+function renderCompareTab(agg){
+  if (!agg) return;
+  const series = state.compareStores.map(name => ({ name, values: agg.storeWeek[name] || new Array(agg.n).fill(0) }));
+  renderLineChart(document.getElementById('compareChart'), series, agg.activeLabels);
+
+  const legendEl = document.getElementById('compareLegend');
+  legendEl.innerHTML = series.map((s,i)=>`<span class="legend-item"><span class="sw" style="background:${SERIES_COLORS[i%SERIES_COLORS.length]}"></span>${s.name}</span>`).join('');
+
+  const tbody = document.getElementById('compareTable');
+  if (series.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No stores selected yet</td></tr>`;
+  } else {
+    tbody.innerHTML = series.map(s=>{
+      const total = s.values.reduce((a,b)=>a+b,0);
+      const weeksActive = s.values.filter(v=>v>0).length;
+      const avg = weeksActive ? total/weeksActive : 0;
+      const maxIdx = s.values.indexOf(Math.max(...s.values));
+      const bestLabel = s.values[maxIdx] > 0 ? agg.activeLabels[maxIdx] : '—';
+      return `<tr><td class="item">${s.name}</td><td class="num">${fmt(total)}</td><td class="num">${weeksActive} / ${agg.n}</td><td class="num">${fmt(avg)}</td><td>${bestLabel}</td></tr>`;
+    }).join('');
+  }
+}
+
+/* ============ Tabs ============ */
+function setTab(tab){
+  state.tab = tab;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tab')===tab));
+  document.getElementById('tab-detail').classList.toggle('active', tab==='detail');
+  document.getElementById('tab-compare').classList.toggle('active', tab==='compare');
+  document.querySelectorAll('.board-row').forEach(r=>r.classList.toggle('active', tab==='detail' && r.getAttribute('data-name')===state.selectedStore));
+}
+function wireTabs(){
+  document.getElementById('tabs').addEventListener('click', (evt)=>{
+    const btn = evt.target.closest('button');
+    if (!btn) return;
+    setTab(btn.getAttribute('data-tab'));
+  });
+}
+
+/* ============ Master render ============ */
+let lastAgg = null;
+let lastTrends = {};
+function renderAll(){
+  const rows = activeRows();
+  const agg = aggregate(rows);
+  const trends = computeTrends();
+  lastAgg = agg; lastTrends = trends;
+  renderKpis(agg);
+  renderFilterSummary(agg);
+  renderCompanyChart(agg);
+  renderBoard(agg, trends);
+  renderSelect(agg);
+  if (!state.selectedStore || !(state.selectedStore in agg.storeTotal)) {
+    const ranked = Object.entries(agg.storeTotal).filter(([,t])=>t>0).sort((a,b)=>b[1]-a[1]);
+    state.selectedStore = (ranked.find(([n])=>n!=='Online Sales') || ranked[0] || [DATA.stores[0]])[0];
+  }
+  document.getElementById('storeSelect').value = state.selectedStore;
+  renderStoreDetail(agg);
+  renderCompareTab(agg);
+}
+function renderCompanyChart(agg){
+  renderBarChart(document.getElementById('companyChart'), agg.weekTotals, agg.activeLabels);
+}
+
+/* ============ Data source badge ============ */
+function updateSourceBadge(){
+  const b = document.getElementById('srcBadge');
+  const t = document.getElementById('srcBadgeText');
+  if (dataSource === 'live'){
+    b.classList.add('live');
+    t.textContent = 'Live data (Supabase)';
+  } else {
+    b.classList.remove('live');
+    t.textContent = `Snapshot (${DATA.weeks.length} wks embedded)`;
+  }
+}
+async function attemptLiveLoad(){
+  const live = await tryLoadLive();
+  if (live && live.rows.length){
+    DATA = live;
+    dataSource = 'live';
+  } else {
+    DATA = EMBEDDED_DATA;
+    dataSource = 'snapshot';
+  }
+  updateSourceBadge();
+}
+
+/* ============ Boot ============ */
+async function boot(){
+  await attemptLiveLoad();
+  resetStateDefaults();
+
+  renderBrandPills();
+  wireBrandPills();
+  wireProductDropdown();
+  wireWeekRange();
+  wireUnitToggle();
+  wireChannelToggle();
+  wireTabs();
+  wireCompareAdd();
+  document.getElementById('btnReset').addEventListener('click', resetFilters);
+  document.getElementById('btnCsv').addEventListener('click', exportCsv);
+  document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+  document.getElementById('storeSelect').addEventListener('change', (e)=> selectStore(e.target.value, lastAgg));
+  document.getElementById('srcBadge').addEventListener('click', async ()=>{
+    document.getElementById('srcBadgeText').textContent = 'Checking…';
+    await attemptLiveLoad();
+    renderAll();
+  });
+
+  const savedStore = loadLastStore();
+  state.selectedStore = (savedStore && DATA.stores.includes(savedStore)) ? savedStore : null;
+
+  renderAll();
+
+  const rankedInit = Object.entries(lastAgg.storeTotal).filter(([,t])=>t>0).sort((a,b)=>b[1]-a[1]).map(([n])=>n);
+  state.compareStores = rankedInit.slice(0, 3);
+  renderCompareChips();
+  renderCompareTab(lastAgg);
+  syncProductBtn();
+
+  window.addEventListener('resize', ()=>{
+    if (lastAgg){
+      renderCompanyChart(lastAgg);
+      renderStoreDetail(lastAgg);
+      renderCompareTab(lastAgg);
+    }
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
