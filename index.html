@@ -24,6 +24,10 @@
   --accent-wash:rgba(42,120,214,0.08);
   --good:#0ca30c;
   --critical:#d03b3b;
+  --warn:#b8860b;
+  --good-soft:rgba(12,163,12,0.12);
+  --warn-soft:rgba(184,134,11,0.14);
+  --critical-soft:rgba(208,59,59,0.12);
   --shadow:0 1px 2px rgba(11,11,11,0.04), 0 8px 24px rgba(11,11,11,0.06);
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
   color-scheme:light;
@@ -34,7 +38,9 @@
     --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
     --border:rgba(255,255,255,0.10); --grid:#2c2c2a; --baseline:#383835;
     --accent:#3987e5; --accent-soft:rgba(57,135,229,0.18); --accent-wash:rgba(57,135,229,0.10);
-    --good:#0ca30c; --critical:#e66767; --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
+    --good:#0ca30c; --critical:#e66767; --warn:#e0b94f;
+    --good-soft:rgba(12,163,12,0.16); --warn-soft:rgba(224,185,79,0.16); --critical-soft:rgba(230,103,103,0.16);
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
     color-scheme:dark;
   }
@@ -44,7 +50,9 @@
   --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
   --border:rgba(255,255,255,0.10); --grid:#2c2c2a; --baseline:#383835;
   --accent:#3987e5; --accent-soft:rgba(57,135,229,0.18); --accent-wash:rgba(57,135,229,0.10);
-  --good:#0ca30c; --critical:#e66767; --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
+  --good:#0ca30c; --critical:#e66767; --warn:#e0b94f;
+  --good-soft:rgba(12,163,12,0.16); --warn-soft:rgba(224,185,79,0.16); --critical-soft:rgba(230,103,103,0.16);
+  --shadow:0 1px 2px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.4);
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300;
   color-scheme:dark;
 }
@@ -81,6 +89,10 @@ body{
 .srcbadge .dot2{width:7px;height:7px;border-radius:50%;background:var(--text-muted);}
 .srcbadge.live .dot2{background:var(--good);}
 .srcbadge.live{color:var(--good);}
+.freshness{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:5px 10px;border-radius:99px;white-space:nowrap;border:1px solid var(--border);background:var(--surface-2);color:var(--text-secondary);}
+.freshness.fresh{color:var(--good);border-color:transparent;background:var(--good-soft);}
+.freshness.due{color:var(--warn);border-color:transparent;background:var(--warn-soft);}
+.freshness.stale{color:var(--critical);border-color:transparent;background:var(--critical-soft);}
 
 /* ---------- KPI strip ---------- */
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
@@ -184,7 +196,19 @@ body{
 .trend.flag{color:var(--critical);background:rgba(208,59,59,0.12);padding:1px 6px;border-radius:5px;}
 .trend.new{color:var(--accent);}
 .trend.flat{color:var(--text-muted);}
-.channel-toggle-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
+.channel-toggle-row{display:flex;justify-content:flex-end;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.upload-card{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-style:dashed;}
+.upload-card .upload-info{min-width:220px;flex:1 1 320px;}
+.upload-card h2{font-size:14.5px;font-weight:600;margin:0 0 3px;}
+.upload-card p{margin:0;font-size:12px;color:var(--text-muted);max-width:640px;}
+.upload-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.iconbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.iconbtn.primary:hover{color:#fff;border-color:var(--accent);}
+.iconbtn:disabled{opacity:0.45;cursor:not-allowed;}
+#uploadStatus{font-size:12px;margin-top:6px;}
+#uploadStatus.err{color:var(--critical);}
+#uploadStatus.ok{color:var(--good);}
+#uploadStatus.busy{color:var(--warn);}
 
 /* ---------- Tabs ---------- */
 .tabs{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;margin-bottom:16px;}
@@ -256,7 +280,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
 
 @media print{
   body{background:#fff !important;color:#000 !important;padding:0;}
-  .filterbar,.toolbtns,.controls,select,.tabs,.channel-toggle-row{display:none !important;}
+  .filterbar,.toolbtns,.controls,select,.tabs,.channel-toggle-row,.upload-card,.freshness{display:none !important;}
   .panel,.titlebar,.kpi,.mini-kpi{box-shadow:none !important;border:1px solid #ccc !important;background:#fff !important;}
   .tabpane{display:block !important;}
   .panel{break-inside:avoid;}
@@ -272,6 +296,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <h1>Bing Lee &mdash; Store Sales Dashboard</h1>
       <p id="dateRangeText">Weekly unit sales by store</p>
     </div>
+    <span class="freshness" id="freshnessBadge" title="How recent the newest loaded week is"></span>
     <button class="srcbadge" id="srcBadge" title="Click to retry loading live data">
       <span class="dot2"></span><span id="srcBadgeText">Snapshot Data</span>
     </button>
@@ -280,6 +305,19 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <button class="iconbtn" id="btnPrint">Print / Save PDF</button>
     </div>
     <span class="badge">For BDM store visits</span>
+  </div>
+
+  <div class="panel upload-card" id="uploadCard">
+    <div class="upload-info">
+      <h2>Add This Week&rsquo;s Bing Lee CSV</h2>
+      <p>Parses in your browser, then saves straight to Supabase &mdash; everyone who opens this page sees the update. Uploading the same week again overwrites it instead of duplicating it.</p>
+      <div id="uploadStatus"></div>
+    </div>
+    <div class="upload-actions">
+      <input type="file" id="csvInput" accept=".csv,text/csv" style="display:none">
+      <button class="iconbtn" id="chooseCsv">Choose CSV</button>
+      <button class="iconbtn primary" id="doUpload" disabled>Add to Dashboard</button>
+    </div>
   </div>
 
   <div class="kpis" id="kpiStrip"></div>
@@ -343,16 +381,28 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
 
   <div class="panel">
     <div class="panel-head">
-      <h2>Store Rankings</h2>
+      <h2 id="rankTitle">Top Stores</h2>
       <span class="hint">Total units in range &middot; trend compares the most recent weeks to the weeks before &middot; click a store to open it in Store Detail</span>
     </div>
     <div class="channel-toggle-row">
+      <div class="seg" id="segStoreRank">
+        <button data-rank="top" class="active">Top</button>
+        <button data-rank="weakest">Weakest</button>
+      </div>
       <div class="seg" id="segChannel">
         <button data-channel="stores" class="active">Stores only</button>
         <button data-channel="all">Include Online Sales</button>
       </div>
     </div>
     <div class="board" id="board"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>No Movement</h2>
+      <span class="hint">Stores with zero units sold in this selection<span id="noMoveCount"></span> &middot; ranked by how long it's been since their last sale &middot; click a store to open it in Store Detail</span>
+    </div>
+    <div class="board" id="noMoveBoard"></div>
   </div>
 
   <div class="panel">
@@ -504,13 +554,13 @@ const state = {
   weekStart: 0, weekEnd: 0, rangeMode: 'all',
   brands: new Set(), products: new Set(),
   tab: 'detail', selectedStore: null, compareStores: [],
-  unitMode: 'net', includeOnline: false
+  unitMode: 'net', includeOnline: false, storeRank: 'top'
 };
 function resetStateDefaults(){
   state.weekStart = 0; state.weekEnd = DATA.weeks.length - 1; state.rangeMode = 'all';
   state.brands = new Set(DATA.brands);
   state.products = new Set(DATA.products.map((_, i) => i));
-  state.unitMode = 'net'; state.includeOnline = false;
+  state.unitMode = 'net'; state.includeOnline = false; state.storeRank = 'top';
 }
 
 function activeRows(){
@@ -795,6 +845,16 @@ function wireChannelToggle(){
     renderAll();
   });
 }
+function wireStoreRankToggle(){
+  document.getElementById('segStoreRank').addEventListener('click', (evt)=>{
+    const btn = evt.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#segStoreRank button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.storeRank = btn.getAttribute('data-rank');
+    renderAll();
+  });
+}
 
 /* ============ FILTER BAR: week range ============ */
 function wireWeekRange(){
@@ -839,6 +899,7 @@ function resetFilters(){
   document.getElementById('rangeCustom').classList.remove('show');
   document.querySelectorAll('#segUnits button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-unit')==='net'));
   document.querySelectorAll('#segChannel button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-channel')==='stores'));
+  document.querySelectorAll('#segStoreRank button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-rank')==='top'));
   syncBrandPills();
   renderProductList(''); syncProductBtn();
   document.getElementById('productSearch').value = '';
@@ -897,11 +958,13 @@ function renderKpis(agg){
 /* ============ Leaderboard ============ */
 function renderBoard(agg, trends){
   const el = document.getElementById('board');
+  const weakest = state.storeRank === 'weakest';
+  document.getElementById('rankTitle').textContent = weakest ? 'Weakest Stores' : 'Top Stores';
   const ranked = Object.entries(agg.storeTotal)
     .filter(([name,t]) => t > 0 && (state.includeOnline || name !== 'Online Sales'))
-    .sort((a,b)=>b[1]-a[1]);
+    .sort((a,b)=> weakest ? a[1]-b[1] : b[1]-a[1]);
   if (ranked.length === 0){ el.innerHTML = '<div class="empty-state">No stores match the current filters</div>'; return; }
-  const max = ranked[0][1];
+  const max = weakest ? ranked[ranked.length-1][1] : ranked[0][1];
   el.innerHTML = ranked.map(([name,total],i)=>{
     const isOnline = name === 'Online Sales';
     const t = isOnline ? null : trends[name];
@@ -918,6 +981,67 @@ function renderBoard(agg, trends){
       </div>
     </div>
   `;}).join('');
+  el.querySelectorAll('.board-row').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      setTab('detail');
+      selectStore(row.getAttribute('data-name'), agg);
+    });
+  });
+}
+
+/* ============ No Movement (stores with zero units in the current selection) ============ */
+function computeLastSaleIdx(){
+  const rows = DATA.rows.filter(([w,s,b,p,q]) => state.brands.has(DATA.brands[b]) && state.products.has(p));
+  const lastSaleIdx = {};
+  DATA.stores.forEach(s => { lastSaleIdx[s] = -1; });
+  rows.forEach(([w,s,b,p,q]) => {
+    const useQ = state.unitMode === 'gross' ? Math.max(q, 0) : q;
+    if (useQ <= 0) return;
+    const name = DATA.stores[s];
+    if (w > lastSaleIdx[name]) lastSaleIdx[name] = w;
+  });
+  return lastSaleIdx;
+}
+function renderNoMovement(agg){
+  const el = document.getElementById('noMoveBoard');
+  const countEl = document.getElementById('noMoveCount');
+  const lastSaleIdx = computeLastSaleIdx();
+  const totalWeeks = DATA.weeks.length;
+  const candidates = DATA.stores.filter(name => (agg.storeTotal[name] || 0) === 0 && (state.includeOnline || name !== 'Online Sales'));
+  countEl.textContent = candidates.length ? ` (${candidates.length})` : '';
+  if (candidates.length === 0){
+    el.innerHTML = '<div class="empty-state">Every store in this selection sold at least one unit &mdash; nice.</div>';
+    return;
+  }
+  const withStaleness = candidates.map(name => {
+    const lastIdx = lastSaleIdx[name];
+    const weeksSince = lastIdx >= 0 ? (totalWeeks - 1 - lastIdx) : null;
+    return { name, lastIdx, weeksSince };
+  }).sort((a,b) => {
+    if (a.lastIdx === -1 && b.lastIdx === -1) return a.name.localeCompare(b.name);
+    if (a.lastIdx === -1) return -1;
+    if (b.lastIdx === -1) return 1;
+    return a.lastIdx - b.lastIdx;
+  }).slice(0, 25);
+  const maxWeeksSince = Math.max(1, ...withStaleness.map(r => r.weeksSince == null ? totalWeeks : r.weeksSince));
+  el.innerHTML = withStaleness.map((r,i) => {
+    const isOnline = r.name === 'Online Sales';
+    const label = r.lastIdx === -1
+      ? 'No sales on record'
+      : (r.weeksSince === 0 ? 'Last sale this week' : `Last sale ${r.weeksSince} wk${r.weeksSince===1?'':'s'} ago`);
+    const fillPct = r.lastIdx === -1 ? 100 : Math.min(100, (r.weeksSince / maxWeeksSince) * 100);
+    return `
+    <div class="board-row" data-name="${r.name}">
+      <span class="board-rank">${i+1}</span>
+      <div class="board-main">
+        <div class="board-name">${r.name}${isOnline ? '<span class="tag-online">ONLINE</span>' : ''}</div>
+        <div class="board-track"><div class="board-fill" style="width:${fillPct.toFixed(1)}%;background:var(--critical);"></div></div>
+      </div>
+      <div class="board-right">
+        <span class="board-value" style="font-size:12px;font-weight:600;">${label}</span>
+      </div>
+    </div>`;
+  }).join('');
   el.querySelectorAll('.board-row').forEach(row=>{
     row.addEventListener('click', ()=>{
       setTab('detail');
@@ -1064,6 +1188,8 @@ function renderAll(){
   renderFilterSummary(agg);
   renderCompanyChart(agg);
   renderBoard(agg, trends);
+  renderNoMovement(agg);
+  updateFreshnessBadge();
   renderSelect(agg);
   if (!state.selectedStore || !(state.selectedStore in agg.storeTotal)) {
     const ranked = Object.entries(agg.storeTotal).filter(([,t])=>t>0).sort((a,b)=>b[1]-a[1]);
@@ -1089,6 +1215,26 @@ function updateSourceBadge(){
     t.textContent = `Snapshot Data (${DATA.weeks.length} wks embedded)`;
   }
 }
+function parseWeekToDate(w){
+  if (/^\d{4}-\d{2}-\d{2}$/.test(w)) return new Date(w+'T00:00:00');
+  const m = String(w).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  return new Date(w);
+}
+function updateFreshnessBadge(){
+  const badge = document.getElementById('freshnessBadge');
+  if (!DATA.weeks.length){ badge.textContent = ''; badge.className = 'freshness'; return; }
+  const latestLabel = DATA.weekLabels[DATA.weekLabels.length-1];
+  const latestDate = parseWeekToDate(DATA.weeks[DATA.weeks.length-1]);
+  const daysSince = Math.floor((Date.now() - latestDate.getTime()) / 86400000);
+  const weeksSince = Math.max(0, Math.floor(daysSince/7));
+  let cls, label;
+  if (weeksSince < 2){ cls = 'fresh'; label = 'Up to date'; }
+  else if (weeksSince < 4){ cls = 'due'; label = `${weeksSince} wks behind`; }
+  else { cls = 'stale'; label = `${weeksSince} wks behind`; }
+  badge.className = 'freshness ' + cls;
+  badge.textContent = `Latest week: ${latestLabel} · ${label}`;
+}
 async function attemptLiveLoad(){
   const live = await tryLoadLive();
   if (live && live.rows.length){
@@ -1099,6 +1245,139 @@ async function attemptLiveLoad(){
     dataSource = 'snapshot';
   }
   updateSourceBadge();
+}
+
+/* ============ Weekly CSV upload ============ */
+function parseCsvBL(text){
+  /* RFC4180-ish parser: handles quoted fields with embedded commas/newlines and "" escaped quotes
+     (a naive split(",") would corrupt any row with a comma inside a quoted field). */
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (inQuotes){
+      if (c === '"'){
+        if (text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ','){ row.push(field); field = ''; }
+      else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r'){ /* skip — \n follows */ }
+      else field += c;
+    }
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => !(r.length === 1 && r[0].trim() === ''));
+}
+function parseBingLeeDate(raw){
+  raw = (raw||'').trim();
+  let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  return null;
+}
+function csvToRecordsBL(text){
+  const rows = parseCsvBL(text);
+  if (rows.length < 2) throw new Error('This file has no data rows');
+  const header = rows[0].map(h => h.trim());
+  const col = name => header.indexOf(name);
+  const idx = {
+    date: col('REPORT DATE'), brand: col('ITEM BRAND'), item: col('ITEM NAME'),
+    desc: col('Description'), store: col('SALES DEPARTMENT NAME'), gln: col('SALES DEPARTMENT GLN'),
+    qty: col('INVOICED QUANTITY')
+  };
+  if (idx.date === -1 || idx.item === -1 || idx.store === -1 || idx.qty === -1){
+    throw new Error('Missing expected column(s) — is this a Bing Lee sales-out export?');
+  }
+  const records = [];
+  let skipped = 0;
+  for (let i = 1; i < rows.length; i++){
+    const r = rows[i];
+    const dateRaw = (r[idx.date]||'').trim();
+    const item = (r[idx.item]||'').trim();
+    if (!dateRaw || !item){ skipped++; continue; } // the export's trailing "Total" row, same skip rule as the loader script
+    const reportDate = parseBingLeeDate(dateRaw);
+    if (!reportDate){ skipped++; continue; }
+    const qty = Number((r[idx.qty]||'0').trim());
+    if (!isFinite(qty)){ skipped++; continue; }
+    records.push({
+      report_date: reportDate,
+      store: (r[idx.store]||'').trim(),
+      store_gln: idx.gln >= 0 ? ((r[idx.gln]||'').trim() || null) : null,
+      brand: idx.brand >= 0 ? (r[idx.brand]||'').trim() : '',
+      item_code: item,
+      description: idx.desc >= 0 ? (r[idx.desc]||'').trim() : '',
+      invoiced_qty: qty
+    });
+  }
+  if (records.length === 0) throw new Error('No valid data rows found in this file');
+  return { records, skipped };
+}
+function setUploadStatus(msg, cls){
+  const el = document.getElementById('uploadStatus');
+  el.textContent = msg;
+  el.className = cls || '';
+}
+function initUpload(){
+  const fileInput = document.getElementById('csvInput');
+  const chooseBtn = document.getElementById('chooseCsv');
+  const uploadBtn = document.getElementById('doUpload');
+  let pendingRecords = null;
+
+  chooseBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    pendingRecords = null;
+    uploadBtn.disabled = true;
+    if (!file){ setUploadStatus('', ''); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const { records, skipped } = csvToRecordsBL(String(reader.result));
+        pendingRecords = records;
+        const dates = [...new Set(records.map(r=>r.report_date))].sort();
+        const label = dates.length === 1 ? dates[0] : `${dates[0]} to ${dates[dates.length-1]}`;
+        setUploadStatus(`Ready: ${records.length} rows (${label})${skipped ? ', ' + skipped + ' non-data lines skipped' : ''}. Click "Add to Dashboard" to save.`, 'ok');
+        uploadBtn.disabled = false;
+      } catch (e){
+        setUploadStatus('Could not read this file: ' + e.message, 'err');
+      }
+    };
+    reader.onerror = () => setUploadStatus('Could not read this file.', 'err');
+    reader.readAsText(file);
+  });
+
+  uploadBtn.addEventListener('click', async () => {
+    if (!pendingRecords || !pendingRecords.length) return;
+    if (typeof supabase === 'undefined'){ setUploadStatus('Supabase client not loaded — check your connection and try again.', 'err'); return; }
+    uploadBtn.disabled = true;
+    chooseBtn.disabled = true;
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const batchSize = 500;
+    let done = 0;
+    try {
+      for (let i = 0; i < pendingRecords.length; i += batchSize){
+        const batch = pendingRecords.slice(i, i + batchSize);
+        setUploadStatus(`Saving… ${done} / ${pendingRecords.length} rows`, 'busy');
+        const { error } = await client.from(SUPABASE_TABLE).upsert(batch, { onConflict: 'report_date,store,item_code' });
+        if (error) throw new Error(error.message || 'Upload failed');
+        done += batch.length;
+      }
+      setUploadStatus(`Saved ${done} rows. Refreshing dashboard…`, 'busy');
+      await attemptLiveLoad();
+      resetFilters();
+      fileInput.value = '';
+      pendingRecords = null;
+      setUploadStatus(`Done — ${done} rows saved and the dashboard is up to date.`, 'ok');
+    } catch (e){
+      setUploadStatus('Upload failed: ' + e.message, 'err');
+    } finally {
+      chooseBtn.disabled = false;
+    }
+  });
 }
 
 /* ============ Boot ============ */
@@ -1112,8 +1391,10 @@ async function boot(){
   wireWeekRange();
   wireUnitToggle();
   wireChannelToggle();
+  wireStoreRankToggle();
   wireTabs();
   wireCompareAdd();
+  initUpload();
   document.getElementById('btnReset').addEventListener('click', resetFilters);
   document.getElementById('btnCsv').addEventListener('click', exportCsv);
   document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
