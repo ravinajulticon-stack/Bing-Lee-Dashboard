@@ -650,8 +650,10 @@ function renderBarChart(container, values, labels){
     if (i===maxIdx && v>0){
       svg += `<text class="value-label" x="${(x+barW/2).toFixed(1)}" y="${(barY-6).toFixed(1)}" text-anchor="middle">${fmt(v)}</text>`;
     }
-    const showEvery = n > 8 ? 2 : 1;
-    if (i % showEvery === 0 || i===n-1){
+    // Label every week while they fit (~52 units of width each); otherwise thin
+    // evenly, anchored on the latest week so it is always labelled.
+    const showEvery = Math.max(1, Math.ceil(52 / band));
+    if ((n-1-i) % showEvery === 0){
       svg += `<text class="axis-label" x="${(x+barW/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${labels[i]}</text>`;
     }
   });
@@ -694,9 +696,9 @@ function renderLineChart(container, series, labels){
     svg += `<line class="gridline" x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
     svg += `<text class="axis-label" x="${padL-8}" y="${(y+3).toFixed(1)}" text-anchor="end">${Math.round(val)}</text>`;
   }
-  const showEvery = n > 8 ? 2 : 1;
+  const showEvery = n > 1 ? Math.max(1, Math.ceil(52 / (plotW/(n-1)))) : 1;
   labels.forEach((lb,i)=>{
-    if (i % showEvery === 0 || i===n-1){
+    if ((n-1-i) % showEvery === 0){
       svg += `<text class="axis-label" x="${xAt(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${lb}</text>`;
     }
   });
