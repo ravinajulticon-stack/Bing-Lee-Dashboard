@@ -1120,7 +1120,7 @@ function renderDetail(){
   const txt = s => document.createTextNode(s);
   kpi('Total Units', txt(fmtNum(total)));
   kpi('Active Weeks', txt(active + ' / ' + wk.length));
-  kpi('Avg / Active Week', txt(fmtNum(avg)));
+  kpi('Avg / Active Week', txt((Math.round(avg * 10) / 10).toLocaleString(undefined, { maximumFractionDigits: 1 })));
   const bw = document.createDocumentFragment();
   bw.append(txt(fmtNum(best) + ' '));
   if (best > 0) bw.appendChild(htmlEl('span', 'when', '(' + fmtWeekLabel(wk[bestIdx]) + ')'));
