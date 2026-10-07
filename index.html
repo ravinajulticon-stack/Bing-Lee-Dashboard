@@ -337,7 +337,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
 
       <div class="filtergroup dropdown" id="productDropdown">
         <span class="flabel">Product</span>
-        <button class="dropdown-btn" id="productBtn">All products <span style="opacity:.6;">&#9662;</span></button>
+        <button class="dropdown-btn" id="productBtn">All Products <span style="opacity:.6;">&#9662;</span></button>
         <div class="dropdown-panel" id="productPanel">
           <input type="text" id="productSearch" placeholder="Search item code or description&hellip;">
           <div class="dropdown-actions">
@@ -787,7 +787,7 @@ function renderProductList(filterText){
 function syncProductBtn(){
   const btn = document.getElementById('productBtn');
   const isAll = state.products.size === DATA.products.length;
-  btn.innerHTML = (isAll ? 'All products' : state.products.size + ' product' + (state.products.size===1?'':'s') + ' selected') + ' <span style="opacity:.6;">&#9662;</span>';
+  btn.innerHTML = (isAll ? 'All Products' : state.products.size + ' Product' + (state.products.size===1?'':'s') + ' Selected') + ' <span style="opacity:.6;">&#9662;</span>';
   btn.classList.toggle('active', !isAll);
 }
 function wireProductDropdown(){
