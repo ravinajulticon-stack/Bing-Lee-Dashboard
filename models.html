@@ -968,7 +968,7 @@ function buildTrendSeries(){
    Single-store drill-down (moved here from the main dashboard's Store Detail tab).
    Honours the Weeks, Units, Brand and Model filters; the Stores multi-select and
    Channel toggle don't apply because the store is chosen explicitly here. */
-const detail = { store: null };
+const detail = { store: null, lastSig: '' };
 const detailParamStore = (() => { try { return new URLSearchParams(location.search).get('store'); } catch(e){ return null; } })();
 let detailParamPending = !!detailParamStore;
 
@@ -1068,7 +1068,16 @@ function renderDetail(){
   const totals = new Map();
   rows.forEach(r => { if (!totals.has(r.store)) totals.set(r.store, 0); });
   scoped.forEach(r => totals.set(r.store, totals.get(r.store) + effUnits(r.qty)));
-  const names = [...totals.keys()].sort((a, b) => a.localeCompare(b));
+  const allNames = [...totals.keys()].sort((a, b) => a.localeCompare(b));
+  // Linked to the main Stores filter: when it is active the picker only lists the selected stores.
+  const filtered = state.stores.size > 0;
+  const names = filtered ? allNames.filter(n => state.stores.has(n)) : allNames;
+  const sig = [...state.stores].sort().join('|');
+  if (sig !== detail.lastSig){                       // the main Stores filter just changed
+    detail.lastSig = sig;
+    if (state.stores.size === 1) detail.store = [...state.stores][0];
+    else if (state.stores.size > 1 && !state.stores.has(detail.store)) detail.store = null;
+  }
 
   if (detailParamPending && names.includes(detailParamStore)) detail.store = detailParamStore;
   if (!detail.store || !names.includes(detail.store)){
@@ -1107,7 +1116,7 @@ function renderDetail(){
   const avg = active ? total / active : 0;
   const best = Math.max(...weekly, 0), bestIdx = weekly.indexOf(best);
 
-  document.getElementById('detailScope').textContent = detail.store + ' · ' + (state.unitMode === 'gross' ? 'Gross' : 'Net') + ' Units';
+  document.getElementById('detailScope').textContent = detail.store + ' · ' + (state.unitMode === 'gross' ? 'Gross' : 'Net') + ' Units' + (filtered ? ' · Following The Stores Filter' : '');
 
   const kpi = (label, valNode, small) => {
     const d = htmlEl('div', 'mini-kpi');
