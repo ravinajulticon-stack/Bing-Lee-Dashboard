@@ -159,7 +159,7 @@ body{
 .tooltip.show{opacity:1;}
 
 /* ---------- Leaderboard ---------- */
-.board{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;}
+.board{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(var(--board-rows,12),auto);gap:8px 22px;}
 .board-row{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;background:transparent;border:1px solid transparent;}
 .board-row:hover{background:var(--accent-wash);}
 .board-row.active{background:var(--accent-soft);border-color:var(--accent);}
@@ -244,7 +244,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
 
 @media (max-width:860px){
   .kpis{grid-template-columns:repeat(2,1fr);}
-  .board{grid-template-columns:1fr;}
+  .board{grid-template-columns:1fr;grid-auto-flow:row;grid-template-rows:none;}
   .two-col{grid-template-columns:1fr;}
   .mini-kpis{grid-template-columns:repeat(2,1fr);}
   select{min-width:0;width:100%;}
@@ -949,6 +949,8 @@ function renderBoard(agg, trends){
     .filter(([name,t]) => t > 0 && (state.includeOnline || name !== 'Online Sales'))
     .sort((a,b)=> weakest ? a[1]-b[1] : b[1]-a[1]);
   if (ranked.length === 0){ el.innerHTML = '<div class="empty-state">No stores match the current filters</div>'; return; }
+  // Fill down the left column first (1-12), then the right (13-24)
+  el.style.setProperty('--board-rows', Math.ceil(ranked.length / 2));
   const max = weakest ? ranked[ranked.length-1][1] : ranked[0][1];
   el.innerHTML = ranked.map(([name,total],i)=>{
     const isOnline = name === 'Online Sales';
@@ -1009,6 +1011,7 @@ function renderNoMovement(agg){
     return a.lastIdx - b.lastIdx;
   }).slice(0, 25);
   const maxWeeksSince = Math.max(1, ...withStaleness.map(r => r.weeksSince == null ? totalWeeks : r.weeksSince));
+  el.style.setProperty('--board-rows', Math.max(1, Math.ceil(withStaleness.length / 2)));
   el.innerHTML = withStaleness.map((r,i) => {
     const isOnline = r.name === 'Online Sales';
     const label = r.lastIdx === -1
