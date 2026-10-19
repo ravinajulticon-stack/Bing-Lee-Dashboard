@@ -274,7 +274,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
     <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
     <div class="titletext">
       <h1>Bing Lee &mdash; Store Sales Dashboard</h1>
-      <p id="dateRangeText">Weekly unit sales by store</p>
+      <p id="dateRangeText">Weekly Unit Sales By Store</p>
     </div>
     <span class="freshness" id="freshnessBadge" title="How recent the newest loaded week is"></span>
     <button class="srcbadge" id="srcBadge" title="Click to retry loading live data">
@@ -285,7 +285,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <button class="iconbtn" id="btnCsv">Download CSV</button>
       <button class="iconbtn" id="btnPrint">Print / Save PDF</button>
     </div>
-    <span class="badge">For BDM store visits</span>
+    <span class="badge">For BDM Store Visits</span>
   </div>
 
   <div class="panel upload-card" id="uploadCard">
@@ -937,7 +937,7 @@ function renderKpis(agg){
     <div class="kpi"><p class="label">Returns</p><p class="value">${fmt(agg.returns)}</p><p class="sub">adjustment lines, this period</p></div>
   `;
   const from = DATA.weekLabels[0], to = DATA.weekLabels[DATA.weekLabels.length-1];
-  document.getElementById('dateRangeText').textContent = `Weekly unit sales by store · ${from} – ${to} · ${DATA.weeks.length} weekly reports`;
+  document.getElementById('dateRangeText').textContent = `Weekly Unit Sales By Store · ${from} – ${to} · ${DATA.weeks.length} Weekly Reports`;
 }
 
 /* ============ Leaderboard ============ */
@@ -1200,7 +1200,7 @@ function updateSourceBadge(){
     t.textContent = 'Live Data (Supabase)';
   } else {
     b.classList.remove('live');
-    t.textContent = `Snapshot Data (${DATA.weeks.length} wks embedded)`;
+    t.textContent = `Snapshot Data (${DATA.weeks.length} Wks Embedded)`;
   }
 }
 function parseWeekToDate(w){
@@ -1217,11 +1217,11 @@ function updateFreshnessBadge(){
   const daysSince = Math.floor((Date.now() - latestDate.getTime()) / 86400000);
   const weeksSince = Math.max(0, Math.floor(daysSince/7));
   let cls, label;
-  if (weeksSince < 2){ cls = 'fresh'; label = 'Up to date'; }
-  else if (weeksSince < 4){ cls = 'due'; label = `${weeksSince} wks behind`; }
-  else { cls = 'stale'; label = `${weeksSince} wks behind`; }
+  if (weeksSince < 2){ cls = 'fresh'; label = 'Up To Date'; }
+  else if (weeksSince < 4){ cls = 'due'; label = `${weeksSince} Wks Behind`; }
+  else { cls = 'stale'; label = `${weeksSince} Wks Behind`; }
   badge.className = 'freshness ' + cls;
-  badge.textContent = `Latest week: ${latestLabel} · ${label}`;
+  badge.textContent = `Latest Week: ${latestLabel} · ${label}`;
 }
 async function attemptLiveLoad(){
   const live = await tryLoadLive();
