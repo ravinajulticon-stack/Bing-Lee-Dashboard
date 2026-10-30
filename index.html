@@ -341,14 +341,14 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
         <div class="dropdown-panel" id="productPanel">
           <input type="text" id="productSearch" placeholder="Search item code or description&hellip;">
           <div class="dropdown-actions">
-            <button class="linklike" id="productAll">Select all</button>
+            <button class="linklike" id="productAll">Select All</button>
             <button class="linklike" id="productNone">Clear</button>
           </div>
           <div id="productList"></div>
         </div>
       </div>
 
-      <button class="linklike reset-link" id="btnReset">Reset filters</button>
+      <button class="linklike reset-link" id="btnReset">Reset Filters</button>
     </div>
     <div class="filter-summary" id="filterSummary"></div>
   </div>
@@ -372,7 +372,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
         <button data-rank="weakest">Weakest</button>
       </div>
       <div class="seg" id="segChannel">
-        <button data-channel="stores" class="active">Stores only</button>
+        <button data-channel="stores" class="active">Stores Only</button>
         <button data-channel="all">Include Online Sales</button>
       </div>
     </div>
@@ -403,14 +403,14 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <div class="mini-kpis" id="storeKpis"></div>
       <div class="two-col">
         <div>
-          <div class="panel-head" style="margin-bottom:10px;"><h2 style="font-size:12.5px;">Weekly units at this store</h2></div>
+          <div class="panel-head" style="margin-bottom:10px;"><h2 style="font-size:12.5px;">Weekly Units At This Store</h2></div>
           <div class="chart-wrap" id="storeChart"></div>
         </div>
         <div>
-          <div class="panel-head" style="margin-bottom:10px;"><h2 style="font-size:12.5px;">Products sold at this store</h2></div>
+          <div class="panel-head" style="margin-bottom:10px;"><h2 style="font-size:12.5px;">Products Sold At This Store</h2></div>
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Item code</th><th>Description</th><th>Brand</th><th class="num">Units</th></tr></thead>
+              <thead><tr><th>Item Code</th><th>Description</th><th>Brand</th><th class="num">Units</th></tr></thead>
               <tbody id="productTable"></tbody>
             </table>
           </div>
@@ -421,7 +421,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
     <div class="tabpane" id="tab-compare">
       <div class="chip-picker" id="compareChips"></div>
       <div class="add-store dropdown" id="storeAddDropdown">
-        <button class="dropdown-btn" id="storeAddBtn">+ Add a store to compare</button>
+        <button class="dropdown-btn" id="storeAddBtn">+ Add a Store to Compare</button>
         <div class="dropdown-panel" id="storeAddPanel">
           <input type="text" id="storeAddSearch" placeholder="Search stores&hellip;">
           <div id="storeAddList"></div>
@@ -431,7 +431,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <div class="legend" id="compareLegend"></div>
       <div class="table-scroll" style="margin-top:18px;">
         <table>
-          <thead><tr><th>Store</th><th class="num">Total units</th><th class="num">Active weeks</th><th class="num">Avg / active wk</th><th>Best week</th></tr></thead>
+          <thead><tr><th>Store</th><th class="num">Total Units</th><th class="num">Active Weeks</th><th class="num">Avg / Active Wk</th><th>Best Week</th></tr></thead>
           <tbody id="compareTable"></tbody>
         </table>
       </div>
@@ -491,15 +491,26 @@ function saveLastStore(name){ try { localStorage.setItem(LS_KEY, name); } catch(
 function loadLastStore(){ try { return localStorage.getItem(LS_KEY); } catch(e){ return null; } }
 
 /* ============ Live data loading (Supabase, with graceful fallback) ============ */
+async function fetchAllSalesRows(client){
+  const out = []; const page = 1000;
+  for (let from = 0; ; from += page){
+    const { data, error } = await client.from(SUPABASE_TABLE)
+      .select('report_date,store,brand,item_code,description,invoiced_qty')
+      .order('id', { ascending: true })
+      .range(from, from + page - 1);
+    if (error) return { data: null, error };
+    out.push(...(data || []));
+    if (!data || data.length < page) break;
+  }
+  return { data: out, error: null };
+}
 async function tryLoadLive(){
   if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.indexOf('REPLACE') === 0) return null;
   if (typeof supabase === 'undefined') return null;
   try {
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data, error } = await client
-      .from(SUPABASE_TABLE)
-      .select('report_date,store,brand,item_code,description,invoiced_qty')
-      .limit(50000);
+    // PostgREST returns at most 1000 rows per request, so page through everything.
+    const { data, error } = await fetchAllSalesRows(client);
     if (error || !data || data.length === 0) return null;
     return transformLiveRows(data);
   } catch (e){
@@ -608,10 +619,10 @@ function computeTrends(){
 }
 function trendBadgeHtml(t){
   if (!t) return '';
-  if (t.dormant) return `<span class="trend flag">Needs attention</span>`;
+  if (t.dormant) return `<span class="trend flag">Needs Attention</span>`;
   if (t.isNew) return `<span class="trend new">New</span>`;
   if (t.pct === null) return '';
-  if (Math.abs(t.pct) < 3) return `<span class="trend flat">&#8213; flat</span>`;
+  if (Math.abs(t.pct) < 3) return `<span class="trend flat">&#8213; Flat</span>`;
   const dir = t.pct > 0 ? 'up' : 'down';
   const arrow = t.pct > 0 ? '&#9650;' : '&#9660;';
   return `<span class="trend ${dir}">${arrow} ${Math.abs(Math.round(t.pct))}%</span>`;
@@ -928,7 +939,7 @@ function renderKpis(agg){
     .sort((a,b)=>b[1]-a[1]);
   const topStore = ranked[0] || ['—', 0];
   const onlineTotal = agg.storeTotal['Online Sales'] || 0;
-  const unitLabel = state.unitMode === 'gross' ? 'Gross units' : 'Total units';
+  const unitLabel = state.unitMode === 'gross' ? 'Gross Units' : 'Total Units';
   el.innerHTML = `
     <div class="kpi"><p class="label">${unitLabel}</p><p class="value">${fmt(agg.grand)}</p><p class="sub">across ${agg.n} week${agg.n===1?'':'s'}</p></div>
     <div class="kpi"><p class="label">Stores with sales</p><p class="value">${ranked.length}</p><p class="sub">of ${DATA.stores.length - 1} physical stores</p></div>
@@ -1015,8 +1026,8 @@ function renderNoMovement(agg){
   el.innerHTML = withStaleness.map((r,i) => {
     const isOnline = r.name === 'Online Sales';
     const label = r.lastIdx === -1
-      ? 'No sales on record'
-      : (r.weeksSince === 0 ? 'Last sale this week' : `Last sale ${r.weeksSince} wk${r.weeksSince===1?'':'s'} ago`);
+      ? 'No Sales On Record'
+      : (r.weeksSince === 0 ? 'Last Sale This Week' : `Last Sale ${r.weeksSince} Wk${r.weeksSince===1?'':'s'} Ago`);
     const fillPct = r.lastIdx === -1 ? 100 : Math.min(100, (r.weeksSince / maxWeeksSince) * 100);
     return `
     <div class="board-row" data-name="${r.name}">
@@ -1069,13 +1080,13 @@ function renderStoreDetail(agg){
   const maxIdx = weekly.indexOf(Math.max(...weekly));
   const bestLabel = weekly[maxIdx] > 0 ? agg.activeLabels[maxIdx] : '—';
   const t = name === 'Online Sales' ? null : lastTrends[name];
-  const trendHtml = t ? (trendBadgeHtml(t) || '<span class="trend flat">no prior data</span>') : '<span class="trend flat">n/a &mdash; online channel</span>';
+  const trendHtml = t ? (trendBadgeHtml(t) || '<span class="trend flat">No Prior Data</span>') : '<span class="trend flat">N/A &mdash; Online Channel</span>';
 
   document.getElementById('storeKpis').innerHTML = `
-    <div class="mini-kpi"><p class="label">Total units</p><p class="value">${fmt(total)}</p></div>
-    <div class="mini-kpi"><p class="label">Active weeks</p><p class="value">${weeksActive} / ${agg.n}</p></div>
+    <div class="mini-kpi"><p class="label">Total Units</p><p class="value">${fmt(total)}</p></div>
+    <div class="mini-kpi"><p class="label">Active Weeks</p><p class="value">${weeksActive} / ${agg.n}</p></div>
     <div class="mini-kpi"><p class="label">Avg / active week</p><p class="value">${fmt(avgActive)}</p></div>
-    <div class="mini-kpi"><p class="label">Best week</p><p class="value">${fmt(weekly[maxIdx]||0)} <span style="font-size:11px;font-weight:500;color:var(--text-muted);">(${bestLabel})</span></p></div>
+    <div class="mini-kpi"><p class="label">Best Week</p><p class="value">${fmt(weekly[maxIdx]||0)} <span style="font-size:11px;font-weight:500;color:var(--text-muted);">(${bestLabel})</span></p></div>
     <div class="mini-kpi"><p class="label">Recent trend</p><p class="value small">${trendHtml}</p></div>
   `;
   renderBarChart(document.getElementById('storeChart'), weekly, agg.activeLabels);

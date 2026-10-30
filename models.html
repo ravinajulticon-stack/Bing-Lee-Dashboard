@@ -301,7 +301,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <div class="filtergroup">
         <span class="flabel">Channel</span>
         <div class="seg" id="segChannel">
-          <button data-channel="stores" class="active">Stores only</button>
+          <button data-channel="stores" class="active">Stores Only</button>
           <button data-channel="all">Include Online Sales</button>
         </div>
       </div>
@@ -309,7 +309,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
     <div class="filterrow">
       <div class="filtergroup">
         <span class="flabel">Model</span>
-        <input type="search" id="modelSearch" list="modelList" autocomplete="off" placeholder="All models — click or type to filter">
+        <input type="search" id="modelSearch" list="modelList" autocomplete="off" placeholder="All Models — Click Or Type To Filter">
         <datalist id="modelList"></datalist>
       </div>
       <div class="filtergroup">
@@ -328,7 +328,7 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
           </div>
         </div>
       </div>
-      <button class="linklike reset-link" id="btnReset">Reset filters</button>
+      <button class="linklike reset-link" id="btnReset">Reset Filters</button>
     </div>
     <div class="filter-summary" id="filterSummary"></div>
   </div>
@@ -421,10 +421,10 @@ footer{text-align:center;font-size:11.5px;color:var(--text-muted);padding-top:4p
       <h2>Model &times; Store Matrix</h2>
       <div class="headctrls">
         <div class="seg" id="rowLimitToggle">
-          <button data-limit="40" class="active">Top 40 stores</button>
-          <button data-limit="0">All stores</button>
+          <button data-limit="40" class="active">Top 40 Stores</button>
+          <button data-limit="0">All Stores</button>
         </div>
-        <button class="iconbtn" id="exportMatrix">Download full matrix CSV</button>
+        <button class="iconbtn" id="exportMatrix">Download Full Matrix CSV</button>
       </div>
     </div>
     <div class="matrix-wrap">
@@ -483,10 +483,17 @@ async function fetchLive(attempt = 0){
   const MAX = 3;
   try{
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data, error } = await client
-      .from(SUPABASE_TABLE)
-      .select('report_date,store,brand,item_code,description,invoiced_qty')
-      .limit(50000);
+    // PostgREST returns at most 1000 rows per request, so page through everything.
+    const data = []; const page = 1000; let error = null;
+    for (let from = 0; ; from += page){
+      const res = await client.from(SUPABASE_TABLE)
+        .select('report_date,store,brand,item_code,description,invoiced_qty')
+        .order('id', { ascending: true })
+        .range(from, from + page - 1);
+      if (res.error){ error = res.error; break; }
+      data.push(...(res.data || []));
+      if (!res.data || res.data.length < page) break;
+    }
     if (error) throw new Error(error.message || 'Supabase query failed');
     return data || [];
   } catch(e){
@@ -520,7 +527,7 @@ async function loadData(){
     if (!records.length){
       errEl.style.display = 'block';
       errEl.textContent = 'Connected to Supabase but found no rows. Add a weekly CSV on the main dashboard first.';
-      badgeText.textContent = 'No data';
+      badgeText.textContent = 'No Data';
       return;
     }
     transform(records);
@@ -532,7 +539,7 @@ async function loadData(){
   } catch(e){
     errEl.style.display = 'block';
     errEl.textContent = "Couldn't load data from Supabase: " + e.message;
-    badgeText.textContent = 'Load failed';
+    badgeText.textContent = 'Load Failed';
   }
 }
 
